@@ -2,7 +2,7 @@ import sys
 import discord
 from discord.ext import commands
 
-import coinche
+from coinche import Coinche
 
 
 # Load the bot token
@@ -12,12 +12,11 @@ with open(".token", "r") as f:
 
 bot = commands.Bot(command_prefix="!coinche ")
 
-tables = []
+tables = {}
 
 @bot.command()
 async def start(ctx, p2: discord.Member, p3: discord.Member, p4: discord.Member):
     players = [ctx.author, p2, p3, p4]
-    # print(players)
     await ctx.send("Starting a game with " + ", ".join([p.mention for p in players]))
 
     guild = ctx.guild
@@ -47,7 +46,18 @@ async def start(ctx, p2: discord.Member, p3: discord.Member, p4: discord.Member)
 
     await channel.send("Hey, ça se passe ici ! " + ", ".join([p.mention for p in players]))
 
-    tables.append(Coinche())
+    tables[channel.id] = Coinche(channel, players)
+    await tables[channel.id].deal()
+
+@bot.command()
+async def annonce(ctx, goal: int, trump: str):
+    table = tables[ctx.channel.id]
+    await table.annonce(ctx, goal, trump)
+
+
+
+
+
 
 
 bot.run(TOKEN)
