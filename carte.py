@@ -2,10 +2,26 @@ from enum import Enum, IntEnum
 from random import shuffle
 
 class Color(Enum):
-    Pique = 1
-    Coeur = 2
-    Carreau = 3
-    Trefle = 4
+    Carreau = 1
+    Trefle = 2
+    Coeur = 3
+    Pique = 4
+
+    def __str__(self):
+        return COLOR_EMOJI[self]
+
+COLOR_DICT = {
+    "Carreau" : Color.Carreau,
+    "Ca"      : Color.Carreau,
+    "K"       : Color.Carreau,
+    "Trefle"  : Color.Trefle,
+    "T"       : Color.Trefle,
+    "Coeur"   : Color.Coeur,
+    "C"       : Color.Coeur,
+    "Co"      : Color.Coeur,
+    "Pique"   : Color.Pique,
+    "P"       : Color.Pique
+}
 
 class Value(IntEnum):
     As    = 8
@@ -16,6 +32,31 @@ class Value(IntEnum):
     Neuf  = 3
     Huit  = 2
     Sept  = 1
+
+VALUE_DICT = {
+    "As"    : Value.As,
+    "A"     : Value.As,
+    "Dix"   : Value.Dix,
+    "10"    : Value.Dix,
+    "Roi"   : Value.Roi,
+    "K"     : Value.Roi,
+    "R"     : Value.Roi,
+    "Dame"  : Value.Dame,
+    "D"     : Value.Dame,
+    "Q"     : Value.Dame,
+    "Valet" : Value.Valet,
+    "V"     : Value.Valet,
+    "J"     : Value.Valet,
+    "Neuf"  : Value.Neuf,
+    "9"     : Value.Neuf,
+    "Huit"  : Value.Huit,
+    "8"     : Value.Huit,
+    "Sept"  : Value.Sept,
+    "7"     : Value.Sept
+}
+
+
+
 
 CARD_POINTS = {
     Value.As    : 11,
@@ -50,9 +91,9 @@ COLOR_EMOJI = {
 class Carte():
     def __init__(self, value, color):
         if type(value) == str:
-            value = Value[value.capitalize()]
+            value = VALUE_DICT[value.capitalize()]
         if type(color) == str:
-            color = Color[color.capitalize()]
+            color = COLOR_DICT[color.capitalize()]
 
         self.color = color
         self.value = value

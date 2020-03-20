@@ -45,24 +45,47 @@ async def start(ctx, p2: discord.Member, p3: discord.Member, p4: discord.Member)
         overwrites=overwrites
     )
 
-    await channel.send("Hey, ça se passe ici ! " + ", ".join([p.mention for p in players]))
-    await channel.send("Phase d'annonce : entrez `!annonce <annonce> <couleur>` pour commencer")
-
-    tables[channel.id] = Coinche(channel, players)
-    await tables[channel.id].deal()
     await ctx.message.delete()
+    tables[channel.id] = Coinche(channel, players)
+    await tables[channel.id].start()
 
 @bot.command()
 async def annonce(ctx, goal: int, trump: str):
-    table = tables[ctx.channel.id]
-    await table.annonce(ctx, goal, trump)
+    try:
+        table = tables[ctx.channel.id]
+        await table.annonce(ctx, goal, trump)
+    except KeyError:
+        await ctx.message.delete()
+        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...")
 
 @bot.command()
+async def bet(ctx, goal: int, trump: str):
+    try:
+        table = tables[ctx.channel.id]
+        await table.bet(ctx, goal, trump)
+    except KeyError:
+        await ctx.message.delete()
+        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...")
+
+@bot.command(name="p")
 async def play(ctx, value, *args):
     color = args[-1]
-    print("Trigger")
-    await ctx.channel.send("J'ai compris : " + str(Carte(value, color)))
-    table = tables[ctx.channel.id]
-    await table.play(ctx, value, color)
+    try:
+        table = tables[ctx.channel.id]
+        await table.play(ctx, value, color)
+    except KeyError:
+        await ctx.message.delete()
+        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...")
+
+@bot.command()
+async def again(ctx):
+    try:
+        table = tables[ctx.channel.id]
+        await table.reset()
+    except KeyError:
+        await ctx.message.delete()
+        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...")
+
+
 
 bot.run(TOKEN)
