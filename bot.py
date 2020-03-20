@@ -17,6 +17,7 @@ tables = {}
 
 @bot.command()
 async def start(ctx, p2: discord.Member, p3: discord.Member, p4: discord.Member):
+    global tables
     players = [ctx.author, p2, p3, p4]
     await ctx.send("Starting a game with " + ", ".join([p.mention for p in players]), delete_after = 10)
 
@@ -51,6 +52,7 @@ async def start(ctx, p2: discord.Member, p3: discord.Member, p4: discord.Member)
 
 @bot.command()
 async def annonce(ctx, goal: int, trump: str):
+    global tables
     try:
         table = tables[ctx.channel.id]
         await table.annonce(ctx, goal, trump)
@@ -60,6 +62,7 @@ async def annonce(ctx, goal: int, trump: str):
 
 @bot.command()
 async def bet(ctx, goal: int, trump: str):
+    global tables
     try:
         table = tables[ctx.channel.id]
         await table.bet(ctx, goal, trump)
@@ -67,8 +70,20 @@ async def bet(ctx, goal: int, trump: str):
         await ctx.message.delete()
         await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...")
 
+@bot.command(name="pass")
+async def pass_annonce(ctx):
+    global tables
+    try:
+        table = tables[ctx.channel.id]
+        await table.bet(ctx, 0, None)
+    except KeyError:
+        await ctx.message.delete()
+        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...")
+
+
 @bot.command(name="p")
 async def play(ctx, value, *args):
+    global tables
     color = args[-1]
     try:
         table = tables[ctx.channel.id]
@@ -79,6 +94,7 @@ async def play(ctx, value, *args):
 
 @bot.command()
 async def again(ctx):
+    global tables
     try:
         table = tables[ctx.channel.id]
         await table.reset()
@@ -86,6 +102,19 @@ async def again(ctx):
         await ctx.message.delete()
         await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...")
 
-
+@bot.command()
+async def end(ctx):
+    global tables
+    try:
+        table = tables[ctx.channel.id]
+        chan = table.channel
+        for p in table.hands_msg:
+            await table.hands_msg[p].delete()
+        del tables[ctx.channel.id]
+        await chan.send("Cloture de la table. Merci d'avoir joué !")
+        await chan.delete()
+    except KeyError:
+        await ctx.message.delete()
+        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...")
 
 bot.run(TOKEN)

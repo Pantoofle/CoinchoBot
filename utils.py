@@ -7,5 +7,6 @@ async def append_line(msg, line):
 
 async def remove_last_line(msg):
     content = msg.content.split("\n")[:-1]
+    content = "\n".join(content)
     await msg.edit(content = content)
 

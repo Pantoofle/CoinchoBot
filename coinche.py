@@ -9,7 +9,7 @@ class Coinche():
         self.channel = channel
         self.players = players
         self.deck = Carte.full_deck()
-        self.goal = None
+        self.goal = 0
         self.trump = None
         self.bet_phase = True
         self.pass_counter = 0
@@ -43,11 +43,18 @@ class Coinche():
         await self.deal()
 
     async def bet(self, ctx, goal: int, trump):
+        if not self.bet_phase:
+            await ctx.message.delete()
+            await ctx.channel.send("La phase d'annonces est terminée " + ctx.author.mention, delete_after = 5)
+            return
+
         if ctx.author != self.players[self.active_player]:
             await ctx.message.delete()
             await ctx.channel.send("C'est pas à toi d'annoncer " + ctx.author.mention, delete_after = 5)
         else:
             if goal == 0:
+                await remove_last_line(self.annonce_msg)
+                await append_line(self.annonce_msg, " - " + ctx.author.mention + " : Passe")
                 self.pass_counter += 1
                 if self.pass_counter == 4 and self.goal is None:
                     await self.channel.send("Personne ne prend ? On va redistribuer alors...")
@@ -55,11 +62,36 @@ class Coinche():
                     return
                 elif self.pass_counter == 3 and self.goal is not None:
                     self.bet_phase = False
-                    await append_line(self.annonce_msg, "")
-                    # TODO
+                    await append_line(self.annonce_msg, "Fin des annonces")
+                    await ctx.message.delete()
+                    await ctx.channel.send("__**Annonces :**__ " + self.taker.mention + " -> " + str(self.goal) + " " + str(self.trump))
+                    await self.setup()
+
+            else:
+                if goal <= self.goal:
+                    await ctx.message.delete()
+                    await ctx.channel.send("Il faut annoncer plus que l'annonce précédente...", delete_after = 5)
+                    return
+                else:
+                    self.pass_counter = 0
+                    self.goal = goal
+                    try:
+                        self.trump = COLOR_DICT[trump.capitalize()]
+                    except KeyError:
+                        await ctx.message.delete()
+                        await ctx.channel.send("Déso, {} n'est pas une couleur valide".format(trump), delete_after = 5)
+                        return
+                        return
+                    self.taker = self.players[self.active_player]
+                    await remove_last_line(self.annonce_msg)
+                    await append_line(self.annonce_msg, " - " + ctx.author.mention + " : " + str(goal) + str(self.trump))
+
+            self.active_player = (self.active_player + 1) % 4
+            await append_line(self.annonce_msg, " - " + self.players[self.active_player].mention + " : ?")
+            await ctx.message.delete()
 
     async def annonce(self, ctx, goal: int, trump):
-        if self.goal is not None and self.trump is not None:
+        if self.bet_phase == False:
             await ctx.message.delete()
             await ctx.channel.send("Hey " + ctx.author.mention + " , les annonces sont déjà faites ! On modifie pas l'annonce ou l'atout pendant une partie !", delete_after = 10)
         else:
@@ -74,6 +106,7 @@ class Coinche():
             self.taker = ctx.author
             await ctx.channel.send("__**Annonces :**__ " + self.taker.mention + " -> " + str(self.goal) + " " + str(self.trump))
             await ctx.message.delete(delay = 5)
+            self.bet_phase = False
 
             await self.setup()
 
@@ -105,6 +138,8 @@ class Coinche():
         await self.update_tricks()
         self.last_trick_msg = await self.channel.send("__**Dernier pli :**__")
         self.active_trick_msg = await self.channel.send("__**Pli actuel :**__\n- En attente de " + self.players[self.dealer].mention)
+        self.active_player = self.dealer
+        self.leader = self.dealer
 
     async def deal(self):
         # Shuffle the deck
@@ -127,9 +162,9 @@ class Coinche():
         self.bet_phase = True
 
     async def play(self, ctx, value, trump):
-        if self.bet_phase = True:
+        if self.bet_phase == True:
             await ctx.message.delete()
-            await ctx.channel.send(ctx.author.mention + " on est pas dans la phase d'annonce" delete_after = 5)
+            await ctx.channel.send(ctx.author.mention + " on est pas dans la phase d'annonce", delete_after = 5)
             return
         try:
             carte = Carte(value, trump)
@@ -148,6 +183,7 @@ class Coinche():
         else:
             self.hands[player].remove(carte)
             await self.update_player_hand(player)
+            # self.active_trick.append((carte, player))
             self.active_trick.append((carte, player))
             self.active_player = (self.active_player + 1) % 4
             text = self.active_trick_msg.content
@@ -161,7 +197,7 @@ class Coinche():
 
     async def gather(self) :
         # Get the stack color
-        color = self.active_trick[0].color
+        color = self.active_trick[0][0].color
 
         # Sort the cards by strength
         stack = sorted(self.active_trick,
@@ -169,7 +205,7 @@ class Coinche():
         print([(c.strength(self.trump, color), str(c)) for (c, p) in stack])
 
         # Find the winner
-        winner = self.active_trick.index(stack[-1][1])
+        winner = self.active_trick[self.active_trick.index(stack[-1])][1]
         await self.channel.send("Pli remporté par " + winner.mention, delete_after = 5)
 
         # Move actual trick to last trick message
@@ -180,13 +216,13 @@ class Coinche():
         await self.last_trick_msg.edit(content = text)
 
         # Move to new leader
-        self.leader = self.players.index[winner]
+        self.leader = self.players.index(winner)
         if self.leader % 2 == 0:
             self.trick_team_A += 1
-            self.cards_teamA += self.active_trick
+            self.cards_teamA += [c for (c, p) in self.active_trick]
         else:
             self.trick_team_B += 1
-            self.cards_teamB += self.active_trick
+            self.cards_teamB += [c for (c, p) in self.active_trick]
 
         self.active_trick = []
         self.active_player = self.leader
@@ -263,5 +299,8 @@ class Coinche():
         self.active_trick = []
         self.active_player = 0
         self.leader = 0
+
+        self.pointsA = 0
+        self.pointsB = 0
 
         await self.start()
