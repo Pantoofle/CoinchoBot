@@ -1,4 +1,5 @@
-from carte import Carte, COLOR_DICT
+from carte import COLOR_DICT
+
 
 class Anounce():
     def __init__(self, goal, trump, capot, generale):
@@ -25,7 +26,8 @@ class Anounce():
     def count_points(self, cards_won, players):
         cards = [cards_won[p] for p in players]
         # Count the number of tricks and points of each player
-        points = [sum([c.points(self.trump) for c in stack]) for stack in cards]
+        points = [sum([c.points(self.trump) for c in stack])
+                  for stack in cards]
         tricks = [len(stack)//4 for stack in cards]
         return [(p, t) for p, t in zip(points, tricks)]
 
@@ -39,30 +41,16 @@ class Anounce():
 
         # Check capot : team taker takes all the tricks
         if self.capot:
-            if results[taker_index][1] + results[(taker_index + 2)%4] == 8:
+            if results[taker_index][1] + results[(taker_index + 2) % 4] == 8:
                 return taker_index % 2
             else:
                 return (taker_index + 1) % 2
 
-         # Else it is a normal game
-        team_points = results[taker_index][0] + results[(taker_index + 2)%4][0]
+        # Else it is a normal game
+        team_points = results[taker_index][0] + \
+            results[(taker_index + 2) % 4][0]
 
         if team_points >= self.goal:
             return taker_index % 2
         else:
             return (taker_index + 1) % 2
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

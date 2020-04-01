@@ -16,7 +16,7 @@ async def remove_last_line(msg):
 def check_belotte(hands, trump):
     for hand in hands:
         if (Carte(Value.Dame, trump) in hand
-           and Carte(Value.Roi, trump) in hand):
+                and Carte(Value.Roi, trump) in hand):
             return True
     return False
 

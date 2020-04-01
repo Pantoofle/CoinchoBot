@@ -35,13 +35,9 @@ class Coinche():
     async def start(self):
         await self.channel.send("Hey, ça se passe ici ! " +
                                 ", ".join([p.mention for p in
-                                          self.players[self.dealer_index:] +
-                                          self.players[:self.dealer_index]]))
-        txt = """Pour annoncer : `!bet <valeur> <atout>` ou `!pass`\n
-               Les valeurs `generale` ou `capot` sont valides \n
-               Pour un Tout Atout, utilise `TA`, pour Sans Atout, utilise `SA`
-              """
-
+                                           self.players[self.dealer_index:] +
+                                           self.players[:self.dealer_index]]))
+        txt = "Pour annoncer : `!bet <valeur> <atout>` ou `!pass`\nLes valeurs `generale` ou `capot` sont valides \nPour un Tout Atout, utilise `TA`, pour Sans Atout, utilise `SA`  "
         await self.channel.send(txt)
 
         self.annonce_msg = await self.channel.send(
@@ -63,7 +59,7 @@ class Coinche():
         # Check if it is the author's turn
         if ctx.author != self.players[self.active_player_index]:
             await ctx.message.delete()
-            await ctx.channel.send("C'est pas à toi d'annoncer " + ctx.author.mention, delete_after = 5)
+            await ctx.channel.send("C'est pas à toi d'annoncer " + ctx.author.mention, delete_after=5)
             return
 
         # If goal is 0, the player passed
@@ -97,13 +93,13 @@ class Coinche():
             anounce = Anounce(goal, trump, capot, generale)
         except KeyError:
             await ctx.message.delete()
-            await ctx.channel.send("C'est pas une annonce valide.", delete_after = 5)
+            await ctx.channel.send("C'est pas une annonce valide.", delete_after=5)
             return
 
         # If the player did not bet enough
         if anounce < self.anounce:
             await ctx.message.delete()
-            await ctx.channel.send("Il faut annoncer plus que l'annonce précédente...", delete_after = 5)
+            await ctx.channel.send("Il faut annoncer plus que l'annonce précédente...", delete_after=5)
             return
 
         self.pass_counter = 0
@@ -119,50 +115,52 @@ class Coinche():
         await append_line(self.annonce_msg, " - " + self.players[self.active_player_index].mention + " : ?")
         await ctx.message.delete()
 
-    async def annonce(self, ctx, goal: int, trump, capot = False, generale = False):
-        if self.bet_phase == False:
+    async def annonce(self, ctx, goal: int, trump, capot=False, generale=False):
+        if self.bet_phase is False:
             await ctx.message.delete()
-            await ctx.channel.send("Les annonces sont déjà faites !", delete_after = 5)
+            await ctx.channel.send("Les annonces sont déjà faites !", delete_after=5)
             return
 
         try:
             self.anounce = Anounce(goal, trump, capot, generale)
         except KeyError:
             await ctx.message.delete()
-            await ctx.channel.send("C'est pas une annonce valide", delete_after = 5)
+            await ctx.channel.send("C'est pas une annonce valide", delete_after=5)
             return
 
         self.taker_index = self.players.index(ctx.author)
-        await ctx.message.delete(delay = 5)
+        await ctx.message.delete(delay=5)
         self.bet_phase = False
 
         await self.setup_play()
 
     async def update_tricks(self):
-        cardsA = self.cards_won[self.players[0]] + self.cards_won[self.players[2]]
-        cardsB = self.cards_won[self.players[1]] + self.cards_won[self.players[3]]
+        cardsA = self.cards_won[self.players[0]] + \
+            self.cards_won[self.players[2]]
+        cardsB = self.cards_won[self.players[1]] + \
+            self.cards_won[self.players[3]]
         tricksA = len(cardsA) // 4
         tricksB = len(cardsB) // 4
 
         await self.trick_msg.edit(
-            content = "__**Plis :**__\n - {} | {} : {}\n - {} | {} : {}".format(self.players[0].mention,
-                                                                                   self.players[2].mention,
-                                                                                   tricksA,
-                                                                                   self.players[1].mention,
-                                                                                   self.players[3].mention,
-                                                                                   tricksB))
+            content="__**Plis :**__\n - {} | {} : {}\n - {} | {} : {}".format(self.players[0].mention,
+                                                                              self.players[2].mention,
+                                                                              tricksA,
+                                                                              self.players[1].mention,
+                                                                              self.players[3].mention,
+                                                                              tricksB))
 
     async def update_global_score(self):
         await self.global_score_msg.edit(
-            content = "__**Score Global :**__\n - {} | {} : {} parties\n - {} | {} : {} parties".format(self.players[0].mention,
-                                                                                   self.players[2].mention,
-                                                                                   self.global_score_A,
-                                                                                   self.players[1].mention,
-                                                                                   self.players[3].mention,
-                                                                                   self.global_score_B))
+            content="__**Score Global :**__\n - {} | {} : {} parties\n - {} | {} : {} parties".format(self.players[0].mention,
+                                                                                                      self.players[2].mention,
+                                                                                                      self.global_score_A,
+                                                                                                      self.players[1].mention,
+                                                                                                      self.players[3].mention,
+                                                                                                      self.global_score_B))
 
     async def update_player_hand(self, player):
-        await self.hands_msg[player].edit(content = "Ta main : \n - " + "\n - ".join([str(c) for c in self.hands[player]]))
+        await self.hands_msg[player].edit(content="Ta main : \n - " + "\n - ".join([str(c) for c in self.hands[player]]))
 
     async def setup_play(self):
         for p in self.players:
@@ -197,9 +195,9 @@ class Coinche():
         if check_belotte(hands, self.anounce.trump):
             print("Belotte détectée pour la team " + str(team))
             if team == 0:
-                self.pointsA+=20
+                self.pointsA += 20
             if team == 1:
-                self.pointsB+=20
+                self.pointsB += 20
 
     async def deal(self):
         # Shuffle the deck
@@ -213,7 +211,8 @@ class Coinche():
 
         # Send the hands to the players
         for (player, hand) in zip(self.players, hands):
-            hand.sort(key=lambda c: 8*c.color.value + c.value.value, reverse=True)
+            hand.sort(key=lambda c: 8*c.color.value +
+                      c.value.value, reverse=True)
             self.hands[player] = hand
             self.hands_msg[player] = await player.send("Ta main : \n - " + "\n - ".join([str(c) for c in hand]))
 
@@ -224,9 +223,9 @@ class Coinche():
     async def play(self, ctx, value, trump):
         # Check if we are in play phase
         # TODO : use !p in bet phase
-        if self.bet_phase == True:
+        if self.bet_phase is True:
             await ctx.message.delete()
-            await ctx.channel.send(ctx.author.mention + " on est dans la phase d'annonce, c'est pas le moment", delete_after = 5)
+            await ctx.channel.send(ctx.author.mention + " on est dans la phase d'annonce, c'est pas le moment", delete_after=5)
             return
 
         # Try to parse the cardr
@@ -234,9 +233,8 @@ class Coinche():
             carte = Carte(value, trump)
         except KeyError:
             await ctx.message.delete()
-            await ctx.channel.send(ctx.author.mention + "J'ai pas compris ta carte !", delete_after = 5)
+            await ctx.channel.send(ctx.author.mention + "J'ai pas compris ta carte !", delete_after=5)
             return
-
 
         player_index = self.players.index(ctx.author)
         player = ctx.author
@@ -244,13 +242,13 @@ class Coinche():
         # Check if it is player's turn
         if player_index != self.active_player_index:
             await ctx.message.delete()
-            await ctx.channel.send(player.mention + " ce n'est pas ton tour !", delete_after = 5)
+            await ctx.channel.send(player.mention + " ce n'est pas ton tour !", delete_after=5)
             return
 
         # Check if player has this card in hand
         if carte not in self.hands[player]:
             await ctx.message.delete()
-            await ctx.channel.send(player.mention + " tu n'as pas cette carte dans ta main...", delete_after = 5)
+            await ctx.channel.send(player.mention + " tu n'as pas cette carte dans ta main...", delete_after=5)
             return
 
         # Then, the card is valid, play it
@@ -274,18 +272,18 @@ class Coinche():
         if len(self.active_trick) == 4:
             await self.gather()
 
-    async def gather(self) :
+    async def gather(self):
         # Find the winner
         winner = who_wins_trick(self.active_trick, self.anounce.trump)
         winner_index = self.players.index(winner)
-        await self.channel.send("Pli remporté par " + winner.mention, delete_after = 5)
+        await self.channel.send("Pli remporté par " + winner.mention, delete_after=5)
 
         # Move actual trick to last trick message
         text = self.active_trick_msg.content.split("\n")
         text[0] = "__**Dernier pli :**__"
         text[-1] = "Pli remporté par " + winner.mention
         text = "\n".join(text)
-        await self.last_trick_msg.edit(content = text)
+        await self.last_trick_msg.edit(content=text)
 
         # Move to new leader
         self.leader_index = winner_index
@@ -310,8 +308,7 @@ class Coinche():
             await self.end_game()
         else:
             # Reset actual trick
-            await self.active_trick_msg.edit(content = "__**Pli actuel :**__\n- " + self.players[self.leader_index].mention + " : ?")
-
+            await self.active_trick_msg.edit(content="__**Pli actuel :**__\n- " + self.players[self.leader_index].mention + " : ?")
 
     async def end_game(self):
         results = self.anounce.count_points(self.cards_won, self.players)
@@ -319,7 +316,8 @@ class Coinche():
         # Print the individual points
         txt = "__**Points personnels :**__\n"
         for (player, (points, tricks)) in enumerate(results):
-            txt += " - {} : {} points | {} plis\n".format(self.players.index(player).mention, points, tricks)
+            txt += " - {} : {} points | {} plis\n".format(
+                self.players.index(player).mention, points, tricks)
 
         # Print the team points
         self.pointsA += results[0][0] + results[2][0]

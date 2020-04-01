@@ -1,5 +1,5 @@
 from enum import Enum, IntEnum
-from random import shuffle
+
 
 class Color(Enum):
     Carreau = 1
@@ -10,81 +10,82 @@ class Color(Enum):
     def __str__(self):
         return COLOR_EMOJI[self]
 
+
 COLOR_DICT = {
-    "Carreau" : Color.Carreau,
-    "Ca"      : Color.Carreau,
-    "K"       : Color.Carreau,
-    "Trefle"  : Color.Trefle,
-    "T"       : Color.Trefle,
-    "Coeur"   : Color.Coeur,
-    "C"       : Color.Coeur,
-    "Co"      : Color.Coeur,
-    "Pique"   : Color.Pique,
-    "P"       : Color.Pique
+    "Carreau": Color.Carreau,
+    "Ca": Color.Carreau,
+    "K": Color.Carreau,
+    "Trefle": Color.Trefle,
+    "T": Color.Trefle,
+    "Coeur": Color.Coeur,
+    "C": Color.Coeur,
+    "Co": Color.Coeur,
+    "Pique": Color.Pique,
+    "P": Color.Pique
 }
+
 
 class Value(IntEnum):
-    As    = 8
-    Dix   = 7
-    Roi   = 6
-    Dame  = 5
+    As = 8
+    Dix = 7
+    Roi = 6
+    Dame = 5
     Valet = 4
-    Neuf  = 3
-    Huit  = 2
-    Sept  = 1
+    Neuf = 3
+    Huit = 2
+    Sept = 1
+
 
 VALUE_DICT = {
-    "As"    : Value.As,
-    "A"     : Value.As,
-    "Dix"   : Value.Dix,
-    "10"    : Value.Dix,
-    "Roi"   : Value.Roi,
-    "K"     : Value.Roi,
-    "R"     : Value.Roi,
-    "Dame"  : Value.Dame,
-    "D"     : Value.Dame,
-    "Q"     : Value.Dame,
-    "Valet" : Value.Valet,
-    "V"     : Value.Valet,
-    "J"     : Value.Valet,
-    "Neuf"  : Value.Neuf,
-    "9"     : Value.Neuf,
-    "Huit"  : Value.Huit,
-    "8"     : Value.Huit,
-    "Sept"  : Value.Sept,
-    "7"     : Value.Sept
+    "As": Value.As,
+    "A": Value.As,
+    "Dix": Value.Dix,
+    "10": Value.Dix,
+    "Roi": Value.Roi,
+    "K": Value.Roi,
+    "R": Value.Roi,
+    "Dame": Value.Dame,
+    "D": Value.Dame,
+    "Q": Value.Dame,
+    "Valet": Value.Valet,
+    "V": Value.Valet,
+    "J": Value.Valet,
+    "Neuf": Value.Neuf,
+    "9": Value.Neuf,
+    "Huit": Value.Huit,
+    "8": Value.Huit,
+    "Sept": Value.Sept,
+    "7": Value.Sept
 }
-
-
 
 
 CARD_POINTS = {
-    Value.As    : 11,
-    Value.Dix   : 10,
-    Value.Roi   : 4,
-    Value.Dame  : 3,
-    Value.Valet : 2,
-    Value.Neuf  : 0,
-    Value.Huit  : 0,
-    Value.Sept  : 0
-    }
+    Value.As: 11,
+    Value.Dix: 10,
+    Value.Roi: 4,
+    Value.Dame: 3,
+    Value.Valet: 2,
+    Value.Neuf: 0,
+    Value.Huit: 0,
+    Value.Sept: 0
+}
 
 VALUE_EMOJI = {
-    Value.As    : ":regional_indicator_a:",
-    Value.Dix   : ":keycap_ten:",
-    Value.Roi   : ":regional_indicator_r:",
-    Value.Dame  : ":regional_indicator_d:",
-    Value.Valet : ":regional_indicator_v:",
-    Value.Neuf  : ":nine:",
-    Value.Huit  : ":eight:",
-    Value.Sept  : ":seven:"
+    Value.As: ":regional_indicator_a:",
+    Value.Dix: ":keycap_ten:",
+    Value.Roi: ":regional_indicator_r:",
+    Value.Dame: ":regional_indicator_d:",
+    Value.Valet: ":regional_indicator_v:",
+    Value.Neuf: ":nine:",
+    Value.Huit: ":eight:",
+    Value.Sept: ":seven:"
 }
 
 COLOR_EMOJI = {
-    Color.Pique : "<:spade:689537818984316930>",
-    Color.Coeur : ":heart:",
-    Color.Trefle : "<:club:689536979792166936>",
-    Color.Carreau : ":diamonds:"
+    Color.Pique: "<:spade:689537818984316930>",
+    Color.Coeur: ":heart:",
+    Color.Trefle: "<:club:689536979792166936>",
+    Color.Carreau: ":diamonds:"
 }
 
 
@@ -145,5 +146,3 @@ class Carte():
             return self.value.value + 8
         else:
             return self.value.value
-
-
