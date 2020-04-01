@@ -334,7 +334,7 @@ class Coinche():
                                                                   self.players[3].mention,
                                                                   self.pointsB,
                                                                   plisB)
-        self.channel.send(txt)
+        await self.channel.send(txt)
 
         # Find the winning team
         winner = self.anounce.who_wins_game(results, self.taker_index)
