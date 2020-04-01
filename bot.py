@@ -58,17 +58,37 @@ async def annonce(ctx, goal: int, trump: str):
         await table.annonce(ctx, goal, trump)
     except KeyError:
         await ctx.message.delete()
-        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...")
+        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after = 5)
 
 @bot.command()
-async def bet(ctx, goal: int, trump: str):
+async def bet(ctx, goal: str, trump: str):
     global tables
+
+    # Find the table
     try:
         table = tables[ctx.channel.id]
-        await table.bet(ctx, goal, trump)
     except KeyError:
         await ctx.message.delete()
-        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...")
+        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after = 5)
+        return
+
+    # Parse the goal
+    capot = (goal == "capot")
+    generale = (goal == "generale")
+    if capot or generale:
+        goal = 182
+        if generale:
+            goal += 1
+    else:
+        try:
+            goal = int(goal)
+        except ValueError:
+            await ctx.message.delete()
+            await ctx.channel.send("J'ai pas compris ton annonce...", delete_after = 5)
+            return
+
+    # Send the goal
+    await table.bet(ctx, goal, trump, capot=capot, generale=generale)
 
 @bot.command(name="pass")
 async def pass_annonce(ctx):
@@ -78,7 +98,7 @@ async def pass_annonce(ctx):
         await table.bet(ctx, 0, None)
     except KeyError:
         await ctx.message.delete()
-        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...")
+        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after = 5)
 
 
 @bot.command(name="p")
@@ -90,7 +110,7 @@ async def play(ctx, value, *args):
         await table.play(ctx, value, color)
     except KeyError:
         await ctx.message.delete()
-        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...")
+        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after = 5)
 
 @bot.command()
 async def again(ctx):
@@ -100,7 +120,7 @@ async def again(ctx):
         await table.reset()
     except KeyError:
         await ctx.message.delete()
-        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...")
+        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after = 5)
 
 @bot.command()
 async def end(ctx):
@@ -111,10 +131,10 @@ async def end(ctx):
         for p in table.hands_msg:
             await table.hands_msg[p].delete()
         del tables[ctx.channel.id]
-        await chan.send("Cloture de la table. Merci d'avoir joué !")
+        await chan.send("Cloture de la table. Merci d'avoir joué !", delete_after = 5)
         await chan.delete()
     except KeyError:
         await ctx.message.delete()
-        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...")
+        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after = 5)
 
 bot.run(TOKEN)
