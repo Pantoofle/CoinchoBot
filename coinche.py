@@ -218,6 +218,7 @@ class Coinche():
 
         self.active_player_index = self.dealer_index
         self.active_trick = []
+        self.pass_counter = 0
         self.bet_phase = True
 
     async def play(self, ctx, value, trump):
@@ -317,7 +318,7 @@ class Coinche():
         txt = "__**Points personnels :**__\n"
         for (player, (points, tricks)) in enumerate(results):
             txt += " - {} : {} points | {} plis\n".format(
-                self.players.index(player).mention, points, tricks)
+                self.players[player].mention, points, tricks)
 
         # Print the team points
         self.pointsA += results[0][0] + results[2][0]
