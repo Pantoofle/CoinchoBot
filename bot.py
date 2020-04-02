@@ -157,6 +157,19 @@ async def end(ctx):
         await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
 
 
+@bot.command()
+async def spectate(ctx, id):
+    global tables
+    try:
+        table = tables[id]
+        await table.channel.set_permissions(ctx.author, read_message=True)
+        await table.vocal.set_permissions(ctx.author, connect=True)
+        await table.channel.send("{} a rejoint en tant que spectateurice !".format(ctx.author.mention))
+    except KeyError:
+        await ctx.message.delete()
+        await ctx.channel.send("Je reconnais pas l'id de la table", delete_after=5)
+
+
 async def update_tables(guild):
     global tables
     global tables_msg
