@@ -109,6 +109,10 @@ async def play(ctx, value, *args):
     color = args[-1]
     try:
         table = tables[ctx.channel.id]
+        # If we are un bet phase, consider !p as a bet
+        if table.bet_phase:
+            await bet(ctx, value, color)
+            return
         await table.play(ctx, value, color)
     except KeyError:
         await ctx.message.delete()
