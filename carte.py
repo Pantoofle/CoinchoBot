@@ -14,6 +14,7 @@ class Color(Enum):
 COLOR_DICT = {
     "Carreau": Color.Carreau,
     "Ca": Color.Carreau,
+    "Carro": Color.Carreau,
     "K": Color.Carreau,
     "Trefle": Color.Trefle,
     "T": Color.Trefle,
