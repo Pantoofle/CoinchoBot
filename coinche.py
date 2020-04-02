@@ -163,7 +163,8 @@ class Coinche():
                                                                                                       self.global_score_B))
 
     async def update_player_hand(self, player):
-        await self.hands_msg[player].edit(content="Ta main : \n - " + "\n - ".join([str(c) for c in self.hands[player]]))
+        await self.hands_msg[player].edit(content="[table {}] Ta main : \n - ".format(self.channel.id) +
+                                          "\n - ".join([str(c) for c in self.hands[player]]))
 
     async def setup_play(self):
         for p in self.players:
