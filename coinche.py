@@ -219,7 +219,8 @@ class Coinche():
             hand.sort(key=lambda c: 8*c.color.value +
                       c.value.value, reverse=True)
             self.hands[player] = hand
-            self.hands_msg[player] = await player.send("Ta main : \n - " + "\n - ".join([str(c) for c in hand]))
+            self.hands_msg[player] = await player.send("[table {}] Ta main : \n - ".format(self.channel.id) +
+                                                       "\n - ".join([str(c) for c in hand]))
 
         self.active_player_index = self.dealer_index
         self.active_trick = []
@@ -311,7 +312,7 @@ class Coinche():
             await self.end_game()
         else:
             # Reset actual trick
-            await self.active_trick_msg.edit(content="__**Pli actuel :**__\n- " + self.players[self.leader_index].mention + " : ?")
+            await self.active_trick_msg.edit(content="__**Pli actuel :**__\n- " + self.players[winner_index].mention + " : ?")
             # Update number of points of each team
             await self.update_tricks()
 
