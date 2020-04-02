@@ -40,6 +40,10 @@ class Coinche():
             self.players[1].mention,
             self.players[3].mention))
 
+        # Score message
+        self.global_score_msg = await self.channel.send("__**Score global :**__")
+        await self.update_global_score()
+
         txt = "Pour annoncer : `!bet <valeur> <atout>` ou `!pass`\nLes valeurs `generale` ou `capot` sont valides"
         await self.channel.send(txt)
 
@@ -182,9 +186,6 @@ class Coinche():
         await self.channel.send("__**Annonces :**__ " + self.players[self.taker_index].mention + " -> " + str(self.anounce))
         # How to play message
         await self.channel.send("Pour jouer : `!p <Valeur> <Couleur>`")
-        # Score message
-        self.global_score_msg = await self.channel.send("__**Score global :**__")
-        await self.update_global_score()
         # Number of tricks taken message
         self.trick_msg = await self.channel.send("__**Plis :**__")
         await self.update_tricks()
