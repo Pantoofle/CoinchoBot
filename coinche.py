@@ -299,9 +299,6 @@ class Coinche():
         # Empty the trick stack
         self.active_trick = []
 
-        # Update number of points of each team
-        await self.update_tricks()
-
         # Check if players have no more cards
         if len(self.hands[self.players[0]]) == 0:
             # Count the 10 bonus points of the last trick
@@ -310,10 +307,14 @@ class Coinche():
             else:
                 self.pointsB += 10
             # Trigger end game
+            # Update number of points of each team
+            await self.update_tricks()
             await self.end_game()
         else:
             # Reset actual trick
             await self.active_trick_msg.edit(content="__**Pli actuel :**__\n- " + self.players[self.leader_index].mention + " : ?")
+            # Update number of points of each team
+            await self.update_tricks()
 
     async def end_game(self):
         results = self.anounce.count_points(self.cards_won, self.players)
