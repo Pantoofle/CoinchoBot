@@ -38,7 +38,7 @@ class Coinche():
                                 ", ".join([p.mention for p in
                                            self.players[self.dealer_index:] +
                                            self.players[:self.dealer_index]]))
-        txt = "Pour annoncer : `!bet <valeur> <atout>` ou `!pass`\nLes valeurs `generale` ou `capot` sont valides \nPour un Tout Atout, utilise `TA`, pour Sans Atout, utilise `SA`  "
+        txt = "Pour annoncer : `!bet <valeur> <atout>` ou `!pass`\nLes valeurs `generale` ou `capot` sont valides"
         await self.channel.send(txt)
 
         self.annonce_msg = await self.channel.send(

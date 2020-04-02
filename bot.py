@@ -98,7 +98,7 @@ async def bet(ctx, goal: str, trump: str):
     await table.bet(ctx, goal, trump, capot=capot, generale=generale)
 
 
-@bot.command(name="pass")
+@bot.command(name="pass", aliases=["nik"])
 async def pass_annonce(ctx):
     global tables
     try:
