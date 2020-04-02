@@ -274,12 +274,12 @@ class Coinche():
         # Delete the author's message
         await ctx.message.delete()
 
+        # Move to next player in the global value now that the modifications are done
+        self.active_player_index = local_active_player_index
+
         # If we have 4 cards in the stack, trigger the gathering
         if len(self.active_trick) == 4:
             await self.gather()
-
-        # Move to next player in the global value now that the modifications are done
-        self.active_player_index = local_active_player_index
 
     async def gather(self):
         # Find the winner
@@ -299,6 +299,9 @@ class Coinche():
         # Empty the trick stack
         self.active_trick = []
 
+        # Move to new leader
+        self.leader_index = winner_index
+
         # Check if players have no more cards
         if len(self.hands[self.players[0]]) == 0:
             # Count the 10 bonus points of the last trick
@@ -312,13 +315,10 @@ class Coinche():
             await self.end_game()
         else:
             # Reset actual trick
-            await self.active_trick_msg.edit(content="__**Pli actuel :**__\n- " + self.players[winner_index].mention + " : ?")
+            await self.active_trick_msg.edit(content="__**Pli actuel :**__\n- " + self.players[self.leader_index].mention + " : ?")
             # Update number of points of each team
             await self.update_tricks()
-
-        # Move to new leader
-        self.leader_index = winner_index
-        self.active_player_index = self.leader_index
+            self.active_player_index = self.leader_index
 
     async def end_game(self):
         results = self.anounce.count_points(self.cards_won, self.players)
