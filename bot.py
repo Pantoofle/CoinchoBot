@@ -111,7 +111,7 @@ async def play(ctx, value, *args):
         table = tables[ctx.channel.id]
         # If we are un bet phase, consider !p as a bet
         if table.bet_phase:
-            await bet(ctx, value, color)
+            await bet.invoke(ctx, value, color)
             return
         await table.play(ctx, value, color)
     except KeyError:
@@ -119,7 +119,7 @@ async def play(ctx, value, *args):
         await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
 
 
-@bot.command()
+@bot.command(aliases=["again", "akor"])
 async def again(ctx):
     global tables
     try:
