@@ -5,8 +5,9 @@ from anounce import Anounce
 
 
 class Coinche():
-    def __init__(self, channel, players):
+    def __init__(self, channel, vocal_channel, players):
         self.channel = channel
+        self.vocal = vocal_channel
         self.players = players
         self.deck = Carte.full_deck()
         self.anounce = None

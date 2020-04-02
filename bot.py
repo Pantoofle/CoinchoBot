@@ -45,8 +45,14 @@ async def start(ctx, p2: discord.Member, p3: discord.Member, p4: discord.Member)
         overwrites=overwrites
     )
 
+    vocal_channel = await ctx.guild.create_voice_channel(
+        name="table-coinche",
+        category=category,
+        overwrites=overwrites
+    )
+
     await ctx.message.delete()
-    tables[channel.id] = Coinche(channel, players)
+    tables[channel.id] = Coinche(channel, vocal_channel, players)
     await tables[channel.id].start()
 
 
@@ -136,6 +142,7 @@ async def end(ctx):
     try:
         table = tables[ctx.channel.id]
         chan = table.channel
+        await table.vocal_channel.delete()
         for p in table.hands_msg:
             await table.hands_msg[p].delete()
         del tables[ctx.channel.id]
