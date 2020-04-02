@@ -111,7 +111,7 @@ async def play(ctx, value, *args):
         table = tables[ctx.channel.id]
         # If we are un bet phase, consider !p as a bet
         if table.bet_phase:
-            await bet.invoke(ctx, value, color)
+            await bet(ctx, value, color)
             return
         await table.play(ctx, value, color)
     except KeyError:
