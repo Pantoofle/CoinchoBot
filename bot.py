@@ -165,6 +165,7 @@ async def spectate(ctx, id: int):
         await table.channel.set_permissions(ctx.author, read_messages=True)
         await table.vocal.set_permissions(ctx.author, connect=True)
         await table.channel.send("{} a rejoint en tant que spectateurice !".format(ctx.author.mention))
+        await ctx.message.delete()
     except KeyError:
         await ctx.message.delete()
         await ctx.channel.send("Je reconnais pas l'id de la table", delete_after=5)
