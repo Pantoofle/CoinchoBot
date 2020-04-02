@@ -162,7 +162,7 @@ async def spectate(ctx, id: int):
     global tables
     try:
         table = tables[id]
-        await table.channel.set_permissions(ctx.author, read_message=True)
+        await table.channel.set_permissions(ctx.author, read_messages=True)
         await table.vocal.set_permissions(ctx.author, connect=True)
         await table.channel.send("{} a rejoint en tant que spectateurice !".format(ctx.author.mention))
     except KeyError:
