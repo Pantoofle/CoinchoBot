@@ -262,13 +262,13 @@ class Coinche():
         await self.update_player_hand(player)
         # Add it to the stack
         self.active_trick.append((carte, player))
-        # Move to next player
-        self.active_player_index = (self.active_player_index + 1) % 4
+        # Move to next player but only localy, to avoid multiple parallel modification
+        local_active_player_index = (self.active_player_index + 1) % 4
 
         # Update the message with the curent trick
         await remove_last_line(self.active_trick_msg)
         await append_line(self.active_trick_msg, " - " + player.mention + " : " + str(carte))
-        await append_line(self.active_trick_msg, " - " + self.players[self.active_player_index].mention + " : ?")
+        await append_line(self.active_trick_msg, " - " + self.players[local_active_player_index].mention + " : ?")
 
         # Delete the author's message
         await ctx.message.delete()
@@ -276,6 +276,9 @@ class Coinche():
         # If we have 4 cards in the stack, trigger the gathering
         if len(self.active_trick) == 4:
             await self.gather()
+
+        # Move to next player in the global value now that the modifications are done
+        self.active_player_index = local_active_player_index
 
     async def gather(self):
         # Find the winner
@@ -289,10 +292,6 @@ class Coinche():
         text[-1] = "Pli remporté par " + winner.mention
         text = "\n".join(text)
         await self.last_trick_msg.edit(content=text)
-
-        # Move to new leader
-        self.leader_index = winner_index
-        self.active_player_index = self.leader_index
 
         # Put the cards in the winner's card stack
         self.cards_won[winner] += [c for (c, p) in self.active_trick]
@@ -315,6 +314,10 @@ class Coinche():
             await self.active_trick_msg.edit(content="__**Pli actuel :**__\n- " + self.players[self.leader_index].mention + " : ?")
             # Update number of points of each team
             await self.update_tricks()
+
+        # Move to new leader
+        self.leader_index = winner_index
+        self.active_player_index = self.leader_index
 
     async def end_game(self):
         results = self.anounce.count_points(self.cards_won, self.players)
