@@ -31,7 +31,7 @@ class Anounce():
         tricks = [len(stack)//4 for stack in cards]
         return [(p, t) for p, t in zip(points, tricks)]
 
-    def who_wins_game(self, results, taker_index):
+    def who_wins_game(self, results, pointsA, pointsB, taker_index):
         # Check generale : taker takes all the tricks
         if self.generale:
             if results[taker_index][1] == 8:
@@ -47,7 +47,8 @@ class Anounce():
                 return (taker_index + 1) % 2
 
         # Else it is a normal game
-        team_points = results[taker_index][0] + \
+        team_points = [pointsA, pointsB][taker_index % 2]
+        team_points += results[taker_index][0] + \
             results[(taker_index + 2) % 4][0]
 
         if team_points >= self.goal:

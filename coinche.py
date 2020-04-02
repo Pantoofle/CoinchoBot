@@ -315,17 +315,17 @@ class Coinche():
         results = self.anounce.count_points(self.cards_won, self.players)
 
         # Print the individual points
-        txt = "__**Points personnels :**__\n"
-        for (player, (points, tricks)) in enumerate(results):
-            txt += " - {} : {} points | {} plis\n".format(
-                self.players[player].mention, points, tricks)
+        # txt = "__**Points personnels :**__\n"
+        # for (player, (points, tricks)) in enumerate(results):
+        #     txt += " - {} : {} points | {} plis\n".format(
+        #         self.players[player].mention, points, tricks)
 
         # Print the team points
         self.pointsA += results[0][0] + results[2][0]
         self.pointsB += results[1][0] + results[3][0]
         plisA = results[0][1] + results[2][1]
         plisB = results[1][1] + results[3][1]
-        txt += "__**Points d'équipe (avec Belotte) :**__\n"
+        txt = "__**Points d'équipe (avec Belote) :**__\n"
         txt += " - Équipe {} | {} : {} points | {} plis\n".format(self.players[0].mention,
                                                                   self.players[2].mention,
                                                                   self.pointsA,
@@ -337,7 +337,8 @@ class Coinche():
         await self.channel.send(txt)
 
         # Find the winning team
-        winner = self.anounce.who_wins_game(results, self.taker_index)
+        winner = self.anounce.who_wins_game(results, self.pointsA,
+                                            self.pointsB, self.taker_index)
 
         # Increment points
         if winner == 0:
