@@ -119,7 +119,7 @@ async def play(ctx, value, *args):
         await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
 
 
-@bot.command(aliases=["again", "akor"])
+@bot.command(aliases=["akor"])
 async def again(ctx):
     global tables
     try:
