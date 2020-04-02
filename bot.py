@@ -142,7 +142,7 @@ async def end(ctx):
     try:
         table = tables[ctx.channel.id]
         chan = table.channel
-        await table.vocal_channel.delete()
+        await table.vocal.delete()
         for p in table.hands_msg:
             await table.hands_msg[p].delete()
         del tables[ctx.channel.id]
