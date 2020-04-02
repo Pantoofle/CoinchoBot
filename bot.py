@@ -12,6 +12,8 @@ with open(".token", "r") as f:
 bot = commands.Bot(command_prefix="!")
 
 tables = {}
+tables_msg = None
+INDEX_CHAN = "tables-actives"
 
 
 @bot.command()
@@ -53,6 +55,7 @@ async def start(ctx, p2: discord.Member, p3: discord.Member, p4: discord.Member)
 
     await ctx.message.delete()
     tables[channel.id] = Coinche(channel, vocal_channel, players)
+    await update_tables(ctx.guild)
     await tables[channel.id].start()
 
 
@@ -148,8 +151,27 @@ async def end(ctx):
         del tables[ctx.channel.id]
         await chan.send("Cloture de la table. Merci d'avoir joué !", delete_after=5)
         await chan.delete()
+        await update_tables(ctx.guild)
     except KeyError:
         await ctx.message.delete()
         await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
+
+
+async def update_tables(guild):
+    global tables
+    global tables_msg
+    txt = "__**Tables actives : **__"
+    for id in tables:
+        table = tables[id]
+        txt += "\n - [{}] : ".format(str(id))
+        txt += " | ".join([p.mention for p in table.players])
+
+    if tables_msg is None:
+        chan = discord.utils.find(
+            lambda c: c.name == INDEX_CHAN, guild.channels)
+        index_msg = await chan.send(txt)
+    else:
+        await index_msg.edit(content=txt)
+
 
 bot.run(TOKEN)

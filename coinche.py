@@ -34,10 +34,12 @@ class Coinche():
         self.leader_index = 0
 
     async def start(self):
-        await self.channel.send("Hey, ça se passe ici ! " +
-                                ", ".join([p.mention for p in
-                                           self.players[self.dealer_index:] +
-                                           self.players[:self.dealer_index]]))
+        await self.channel.send("Début de partie ! {} | {} VS {} | {}".format(
+            self.players[0].mention,
+            self.players[2].mention,
+            self.players[1].mention,
+            self.players[3].mention))
+
         txt = "Pour annoncer : `!bet <valeur> <atout>` ou `!pass`\nLes valeurs `generale` ou `capot` sont valides"
         await self.channel.send(txt)
 
@@ -224,7 +226,6 @@ class Coinche():
 
     async def play(self, ctx, value, trump):
         # Check if we are in play phase
-        # TODO : use !p in bet phase
         if self.bet_phase is True:
             await ctx.message.delete()
             await ctx.channel.send(ctx.author.mention + " on est dans la phase d'annonce, c'est pas le moment", delete_after=5)
