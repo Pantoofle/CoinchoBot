@@ -158,7 +158,7 @@ async def end(ctx):
 
 
 @bot.command()
-async def spectate(ctx, id):
+async def spectate(ctx, id: int):
     global tables
     try:
         table = tables[id]
@@ -182,9 +182,9 @@ async def update_tables(guild):
     if tables_msg is None:
         chan = discord.utils.find(
             lambda c: c.name == INDEX_CHAN, guild.channels)
-        index_msg = await chan.send(txt)
+        tables_msg = await chan.send(txt)
     else:
-        await index_msg.edit(content=txt)
+        await tables_msg.edit(content=txt)
 
 
 bot.run(TOKEN)
