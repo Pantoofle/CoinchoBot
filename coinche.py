@@ -151,8 +151,8 @@ class Coinche():
 
         await self.trick_msg.edit(
             content="""__**Plis :**__
-                       - {} | {} : {}
-                       - {} | {} : {}""".format(
+            - {} | {} : {}
+            - {} | {} : {}""".format(
                 self.players[0].mention,
                 self.players[2].mention,
                 tricksA,
@@ -163,8 +163,8 @@ class Coinche():
     async def update_global_score(self):
         await self.global_score_msg.edit(
             content="""__**Score Global: **__
-                       - {} | {}: {} parties
-                       - {} | {}: {} parties""".format(
+            - {} | {}: {} parties
+            - {} | {}: {} parties""".format(
                 self.players[0].mention,
                 self.players[2].mention,
                 self.global_score_A,
