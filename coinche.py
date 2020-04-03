@@ -175,8 +175,8 @@ class Coinche():
     async def update_player_hand(self, player):
         txt = "[table {}] Ta main :".format(self.channel.id)
         for color in Color:
-            txt += "\n {} : ".format(COLOR_EMOJI[color])
-            txt += "".join([VALUE_EMOJI[card.value] for card in
+            txt += "\n {} : ".format(color)
+            txt += "".join([str(card.value) for card in
                             self.hands[player] if card.color == color])
 
         await self.hands_msg[player].edit(content=txt)
