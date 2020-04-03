@@ -6,7 +6,8 @@ from anounce import Anounce
 
 
 class Coinche():
-    def __init__(self, channel, vocal_channel, players):
+    def __init__(self, channel, vocal_channel, players, index):
+        self.index = index
         self.channel = channel
         self.vocal = vocal_channel
         self.players = players
@@ -174,7 +175,7 @@ class Coinche():
                 self.global_score_B))
 
     async def update_player_hand(self, player):
-        txt = "[table {}] Ta main :".format(self.channel.id)
+        txt = "[table {}] Ta main :".format(self.index)
         for color in Color:
             txt += "\n {} : ".format(color)
             txt += "".join([str(card.value) for card in

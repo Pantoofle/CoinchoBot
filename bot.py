@@ -16,6 +16,8 @@ bot = commands.Bot(command_prefix="!")
 tables = {}
 tables_msg = None
 INDEX_CHAN = "tables-actives"
+index_to_id = {}
+index_to_id["next"] = 1
 
 
 @bot.command()
@@ -56,7 +58,13 @@ async def start(ctx, p2: discord.Member, p3: discord.Member, p4: discord.Member)
     )
 
     await delete_message(ctx.message)
-    tables[channel.id] = Coinche(channel, vocal_channel, players)
+    # Register the table in the index list
+    index = index_to_id["next"]
+    index_to_id[index] = channel.id
+    index_to_id["next"] += 1
+    # Create the table
+    tables[channel.id] = Coinche(channel, vocal_channel, players, index)
+
     await update_tables(ctx.guild)
     await tables[channel.id].start()
 
@@ -160,9 +168,10 @@ async def end(ctx):
 
 
 @bot.command()
-async def spectate(ctx, id: int):
+async def spectate(ctx, index: int):
     global tables
     try:
+        id = index_to_id[index]
         table = tables[id]
         await table.channel.set_permissions(ctx.author, read_messages=True)
         await table.vocal.set_permissions(ctx.author, view_channel=True)
@@ -194,6 +203,7 @@ async def swap(ctx, target: discord.Member):
         table = tables[ctx.channel.id]
         await table.swap(ctx.author, target)
         await delete_message(ctx.message)
+        await update_tables(ctx.guild)
     except KeyError:
         await delete_message(ctx.message)
         await ctx.channel.send("Je peux pas faire ça hors d'un chan de coinche", delete_after=5)
@@ -203,10 +213,15 @@ async def update_tables(guild):
     global tables
     global tables_msg
     txt = "__**Tables actives : **__"
-    for id in tables:
-        table = tables[id]
-        txt += "\n - [{}] : ".format(str(id))
-        txt += " | ".join([p.mention for p in table.players])
+    for index in index_to_id:
+        id = index_to_id[index]
+        try:
+            table = tables[id]
+            txt += "\n - [{}] : ".format(str(index))
+            txt += " | ".join([p.mention for p in table.players])
+        except KeyError:
+            print("Table {} plus active. Suppression de l'index".format(index))
+            index_to_id.pop(index)
 
     if tables_msg is None:
         chan = discord.utils.find(
