@@ -56,10 +56,13 @@ VALUE_DICT = {
     "J": Value.Valet,
     "Neuf": Value.Neuf,
     "9": Value.Neuf,
+    "Ç": Value.Neuf,
     "Huit": Value.Huit,
     "8": Value.Huit,
+    "_": Value.Huit,
     "Sept": Value.Sept,
-    "7": Value.Sept
+    "7": Value.Sept,
+    "è": Value.Sept
 }
 
 
