@@ -1,5 +1,6 @@
 from carte import Carte, Value
 import discord
+from random import randint
 
 
 async def append_line(msg, line):
@@ -39,3 +40,28 @@ async def delete_message(m):
         await m.delete()
     except discord.errors.NotFound:
         print("Message not found. Passing.")
+
+
+def shuffle_deck(deck):
+    # Step 1 : cut the deck at a random point
+    pos = randint(1, len(deck) - 1)
+    deck = deck[pos:] + deck[:pos]
+    return deck
+
+
+def deal_deck(deck):
+    hands = [[], [], [], []]
+    # First deal 3 cards to each
+    for h in hands:
+        h += deck[:3]
+        deck = deck[3:]
+    # Do it a second time
+    for h in hands:
+        h += deck[:3]
+        deck = deck[3:]
+    # Then deal 2 cards each
+    for h in hands:
+        h += deck[:2]
+        deck = deck[2:]
+
+    return hands

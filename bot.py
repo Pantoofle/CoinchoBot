@@ -173,6 +173,32 @@ async def spectate(ctx, id: int):
         await ctx.channel.send("Je reconnais pas l'id de la table", delete_after=5)
 
 
+@bot.command()
+async def leave(ctx):
+    global tables
+    try:
+        table = tables[ctx.channel.id]
+        await table.channel.set_permissions(ctx.author, read_messages=False)
+        await table.vocal.set_permissions(ctx.author, view_channel=False)
+        await table.channel.send("{} n'est plus spectateurice !".format(ctx.author.mention))
+        await delete_message(ctx.message)
+    except KeyError:
+        await delete_message(ctx.message)
+        await ctx.channel.send("Je peux pas faire ça hors d'un chan de coinche", delete_after=5)
+
+
+@bot.command()
+async def swap(ctx, target: discord.Member):
+    global tables
+    try:
+        table = tables[ctx.channel.id]
+        await table.swap(ctx.author, target)
+        await delete_message(ctx.message)
+    except KeyError:
+        await delete_message(ctx.message)
+        await ctx.channel.send("Je peux pas faire ça hors d'un chan de coinche", delete_after=5)
+
+
 async def update_tables(guild):
     global tables
     global tables_msg

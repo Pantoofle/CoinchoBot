@@ -1,6 +1,7 @@
 from random import shuffle
 from carte import Carte, Color
-from utils import append_line, remove_last_line, check_belotte, who_wins_trick, delete_message
+from utils import append_line, remove_last_line, check_belotte, who_wins_trick
+from utils import delete_message, shuffle_deck, deal_deck
 from anounce import Anounce
 
 
@@ -9,7 +10,7 @@ class Coinche():
         self.channel = channel
         self.vocal = vocal_channel
         self.players = players
-        self.deck = Carte.full_deck()
+        self.deck = shuffle(Carte.full_deck())
         self.anounce = None
         self.bet_phase = True
         self.pass_counter = 0
@@ -224,13 +225,10 @@ class Coinche():
 
     async def deal(self):
         # Shuffle the deck
-        shuffle(self.deck)
+        self.deck = shuffle_deck(self.deck)
 
         # Deal the cards
-        hands = [self.deck[::4],
-                 self.deck[1::4],
-                 self.deck[2::4],
-                 self.deck[3::4]]
+        hands = deal_deck(self.deck)
 
         # Send the hands to the players
         for (player, hand) in zip(self.players, hands):
@@ -429,3 +427,27 @@ class Coinche():
         self.bet_phase = True
 
         await self.start()
+
+    async def swap(self, player, target):
+        if player not in self.players:
+            self.channel.send("{} est pas un·e joueureuse de cette partie".format(
+                player.mention), delete_after=5)
+            return
+
+        # Change the entry in self.players
+        index = self.players.index(player)
+        self.players[index] = target
+
+        # Change the hands
+        self.hands[target] = self.hands.pop(player)
+
+        # Send the new hand
+        self.hands_msg[target] = target.send("__**Ta main**__")
+        self.update_player_hand(target)
+
+        # Delete the old hand
+        delete_message(self.hands_msg.pop(player))
+
+        # Send notification
+        self.channel.send("{} a laissé sa place à {} !".format(
+            player.mention, target.mention), delete_after=5)
