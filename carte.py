@@ -62,7 +62,7 @@ VALUE_DICT = {
     "_": Value.Huit,
     "Sept": Value.Sept,
     "7": Value.Sept,
-    "è": Value.Sept
+    "È": Value.Sept
 }
 
 
