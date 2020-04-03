@@ -2,10 +2,10 @@ from enum import Enum, IntEnum
 
 
 class Color(Enum):
-    Carreau = 1
-    Trefle = 2
-    Coeur = 3
-    Pique = 4
+    Pique = 1
+    Coeur = 2
+    Trefle = 3
+    Carreau = 4
 
     def __str__(self):
         return COLOR_EMOJI[self]
@@ -35,6 +35,9 @@ class Value(IntEnum):
     Neuf = 3
     Huit = 2
     Sept = 1
+
+    def __str__(self):
+        return VALUE_EMOJI[self]
 
 
 VALUE_DICT = {
