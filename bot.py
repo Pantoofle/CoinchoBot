@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+import random
 
 from coinche import Coinche
 
@@ -187,5 +188,22 @@ async def update_tables(guild):
     else:
         await tables_msg.edit(content=txt)
 
+
+@bot.command()
+async def roll(ctx, txt):
+    try:
+        n, _, f = txt.partition("d")
+        n, f = abs(int(n)), abs(int(f))
+        if n == 1:
+            await ctx.send("Résultat du dé : **" + str(random.randint(1, f)) + "**")
+        else:
+            dices = [random.randint(1, f) for _ in range(n)]
+            s = sum(dices)
+            await ctx.send("Résultat des dés : (**" + "** + **".join(
+                [str(v) for v in dices]) + "**) = **" + str(s) + "**")
+    except ValueError:
+        await ctx.message.delete()
+        await ctx.send("Pour lancer des dés : `!roll <nb de dés>d<nombre de faces>`, par exemple `!roll 3d10`", delete_after=5)
+        return
 
 bot.run(TOKEN)
