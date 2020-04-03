@@ -187,8 +187,9 @@ class Coinche():
 
         # Sort the hands with the new trump value
         for player in self.hands:
-            self.hands.sort(key=lambda c: c.strength(self.anounce.trump, None),
-                            reverse=True)
+            self.hands[player].sort(
+                key=lambda c: c.strength(self.anounce.trump, None),
+                reverse=True)
             await self.update_player_hand(player)
 
         self.leader_index = self.dealer_index
