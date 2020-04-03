@@ -83,10 +83,10 @@ VALUE_EMOJI = {
 }
 
 COLOR_EMOJI = {
-    Color.Pique: "<:spade:689537818984316930>",
-    Color.Coeur: ":heart:",
+    Color.Carreau: ":diamonds:",
     Color.Trefle: "<:club:689536979792166936>",
-    Color.Carreau: ":diamonds:"
+    Color.Coeur: ":heart:",
+    Color.Pique: "<:spade:689537818984316930>"
 }
 
 
