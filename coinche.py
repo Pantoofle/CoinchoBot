@@ -150,9 +150,9 @@ class Coinche():
         tricksB = len(cardsB) // 4
 
         await self.trick_msg.edit(
-            content="""__**Plis :**__
-            - {} | {} : {}
-            - {} | {} : {}""".format(
+            content=("__**Plis :**__\n"
+                     "- {} | {} : {}\n"
+                     "- {} | {} : {}").format(
                 self.players[0].mention,
                 self.players[2].mention,
                 tricksA,
@@ -162,9 +162,9 @@ class Coinche():
 
     async def update_global_score(self):
         await self.global_score_msg.edit(
-            content="""__**Score Global: **__
-            - {} | {}: {} parties
-            - {} | {}: {} parties""".format(
+            content=("__**Score Global: **__\n"
+                     "- {} | {}: {} parties\n"
+                     "- {} | {}: {} parties").format(
                 self.players[0].mention,
                 self.players[2].mention,
                 self.global_score_A,
