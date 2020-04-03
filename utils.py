@@ -37,5 +37,5 @@ def who_wins_trick(stack, trump):
 async def delete_message(m):
     try:
         await m.delete()
-    except discord.error.NotFound:
+    except discord.errors.NotFound:
         print("Message not found. Passing.")
