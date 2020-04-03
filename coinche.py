@@ -1,5 +1,5 @@
 from random import shuffle
-from carte import Carte
+from carte import Carte, COLOR_EMOJI, VALUE_EMOJI, Color
 from utils import append_line, remove_last_line, check_belotte, who_wins_trick
 from anounce import Anounce
 
@@ -150,29 +150,46 @@ class Coinche():
         tricksB = len(cardsB) // 4
 
         await self.trick_msg.edit(
-            content="__**Plis :**__\n - {} | {} : {}\n - {} | {} : {}".format(self.players[0].mention,
-                                                                              self.players[2].mention,
-                                                                              tricksA,
-                                                                              self.players[1].mention,
-                                                                              self.players[3].mention,
-                                                                              tricksB))
+            content="""__**Plis :**__\n
+                       - {} | {} : {}\n
+                       - {} | {} : {}""".format(
+                self.players[0].mention,
+                self.players[2].mention,
+                tricksA,
+                self.players[1].mention,
+                self.players[3].mention,
+                tricksB))
 
     async def update_global_score(self):
         await self.global_score_msg.edit(
-            content="__**Score Global :**__\n - {} | {} : {} parties\n - {} | {} : {} parties".format(self.players[0].mention,
-                                                                                                      self.players[2].mention,
-                                                                                                      self.global_score_A,
-                                                                                                      self.players[1].mention,
-                                                                                                      self.players[3].mention,
-                                                                                                      self.global_score_B))
+            content="""__**Score Global: **__\n
+                       - {} | {}: {} parties\n
+                       - {} | {}: {} parties""".format(
+                self.players[0].mention,
+                self.players[2].mention,
+                self.global_score_A,
+                self.players[1].mention,
+                self.players[3].mention,
+                self.global_score_B))
 
     async def update_player_hand(self, player):
-        await self.hands_msg[player].edit(content="[table {}] Ta main : \n - ".format(self.channel.id) +
-                                          "\n - ".join([str(c) for c in self.hands[player]]))
+        txt = "[table {}] Ta main :"
+        for color in Color:
+            txt += "\n {} : ".format(COLOR_EMOJI[color])
+            txt += "".join([VALUE_EMOJI[card.value] for card in
+                            self.hands[player] if card.color == color])
+
+        await self.hands_msg[player].edit(content=txt)
 
     async def setup_play(self):
         for p in self.players:
             self.cards_won[p] = []
+
+        # Sort the hands with the new trump value
+        for player in self.hands:
+            self.hands.sort(key=lambda c: c.strength(self.anounce.trump, None),
+                            reverse=True)
+            await self.update_player_hand(player)
 
         self.leader_index = self.dealer_index
         # If there is a generale, change the leader and active player
@@ -219,8 +236,8 @@ class Coinche():
             hand.sort(key=lambda c: 8*c.color.value +
                       c.value.value, reverse=True)
             self.hands[player] = hand
-            self.hands_msg[player] = await player.send("[table {}] Ta main : \n - ".format(self.channel.id) +
-                                                       "\n - ".join([str(c) for c in hand]))
+            self.hands_msg[player] = await player.send("[table {}]")
+            await self.update_player_hand(player)
 
         self.active_player_index = self.dealer_index
         self.active_trick = []
@@ -274,7 +291,8 @@ class Coinche():
         # Delete the author's message
         await ctx.message.delete()
 
-        # Move to next player in the global value now that the modifications are done
+        # Move to next player in the global value now that
+        # the modifications are done
         self.active_player_index = local_active_player_index
 
         # If we have 4 cards in the stack, trigger the gathering
@@ -315,7 +333,10 @@ class Coinche():
             await self.end_game()
         else:
             # Reset actual trick
-            await self.active_trick_msg.edit(content="__**Pli actuel :**__\n- " + self.players[self.leader_index].mention + " : ?")
+            await self.active_trick_msg.edit(
+                content="__**Pli actuel :**__\n- "
+                + self.players[self.leader_index].mention + " : ?")
+
             # Update number of points of each team
             await self.update_tricks()
             self.active_player_index = self.leader_index
@@ -323,26 +344,25 @@ class Coinche():
     async def end_game(self):
         results = self.anounce.count_points(self.cards_won, self.players)
 
-        # Print the individual points
-        # txt = "__**Points personnels :**__\n"
-        # for (player, (points, tricks)) in enumerate(results):
-        #     txt += " - {} : {} points | {} plis\n".format(
-        #         self.players[player].mention, points, tricks)
-
         # Print the team points
         self.pointsA += results[0][0] + results[2][0]
         self.pointsB += results[1][0] + results[3][0]
         plisA = results[0][1] + results[2][1]
         plisB = results[1][1] + results[3][1]
-        txt = "__**Points d'équipe (avec Belote) :**__\n"
-        txt += " - Équipe {} | {} : {} points | {} plis\n".format(self.players[0].mention,
-                                                                  self.players[2].mention,
-                                                                  self.pointsA,
-                                                                  plisA)
-        txt += " - Équipe {} | {} : {} points | {} plis\n".format(self.players[1].mention,
-                                                                  self.players[3].mention,
-                                                                  self.pointsB,
-                                                                  plisB)
+        txt = "__**Points d'équipe (avec Belote pour l'attaque) :**__\n"
+
+        txt += " - Équipe {} | {} : {} points | {} plis\n".format(
+            self.players[0].mention,
+            self.players[2].mention,
+            self.pointsA,
+            plisA)
+
+        txt += " - Équipe {} | {} : {} points | {} plis\n".format(
+            self.players[1].mention,
+            self.players[3].mention,
+            self.pointsB,
+            plisB)
+
         await self.channel.send(txt)
 
         # Find the winning team
@@ -356,8 +376,10 @@ class Coinche():
             self.global_score_B += 1
 
         # Send results
-        await self.channel.send("Victoire de l'équipe {} | {} !".format(self.players[0+winner].mention,
-                                                                        self.players[2+winner].mention))
+        await self.channel.send("Victoire de l'équipe {} | {} !".format(
+            self.players[0+winner].mention,
+            self.players[2+winner].mention))
+
         await self.update_global_score()
 
         # Delete the hand messages
