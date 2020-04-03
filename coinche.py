@@ -150,8 +150,8 @@ class Coinche():
         tricksB = len(cardsB) // 4
 
         await self.trick_msg.edit(
-            content="""__**Plis :**__\n
-                       - {} | {} : {}\n
+            content="""__**Plis :**__
+                       - {} | {} : {}
                        - {} | {} : {}""".format(
                 self.players[0].mention,
                 self.players[2].mention,
@@ -162,8 +162,8 @@ class Coinche():
 
     async def update_global_score(self):
         await self.global_score_msg.edit(
-            content="""__**Score Global: **__\n
-                       - {} | {}: {} parties\n
+            content="""__**Score Global: **__
+                       - {} | {}: {} parties
                        - {} | {}: {} parties""".format(
                 self.players[0].mention,
                 self.players[2].mention,
@@ -173,7 +173,7 @@ class Coinche():
                 self.global_score_B))
 
     async def update_player_hand(self, player):
-        txt = "[table {}] Ta main :"
+        txt = "[table {}] Ta main :".format(self.channel.id)
         for color in Color:
             txt += "\n {} : ".format(COLOR_EMOJI[color])
             txt += "".join([VALUE_EMOJI[card.value] for card in
