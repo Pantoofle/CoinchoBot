@@ -190,6 +190,21 @@ async def update_tables(guild):
 
 
 @bot.command()
+async def clean(ctx):
+    global tables
+    global bot
+    try:
+        table = tables[ctx.channel.id]
+        # Delete all messages not from CoinchoBot
+        async for m in table.channel.history():
+            if m.author != bot.user:
+                await m.delete()
+    except KeyError:
+        await ctx.message.delete()
+        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
+
+
+@bot.command()
 async def roll(ctx, txt):
     try:
         n, _, f = txt.partition("d")
