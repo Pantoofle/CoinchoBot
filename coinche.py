@@ -458,7 +458,7 @@ class Coinche():
                 "Seul un·e joueureuse peut faire ça", delete_after=5)
             return
 
-        self.channel.send("{} abandonne. ")
+        self.channel.send("{} abandonne.")
 
         # The player that surrenders is now the one on defense
         self.taker_index = (self.players[player] + 1) % 4
