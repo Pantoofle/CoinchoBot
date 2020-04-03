@@ -1,4 +1,5 @@
 from carte import Carte, Value
+import discord
 
 
 async def append_line(msg, line):
@@ -31,3 +32,10 @@ def who_wins_trick(stack, trump):
 
     # Find the winner
     return stack[-1][1]
+
+
+async def delete_message(m):
+    try:
+        await m.delete()
+    except discord.error.NotFound:
+        print("Message not found. Passing.")

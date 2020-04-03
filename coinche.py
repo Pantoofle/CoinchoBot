@@ -1,6 +1,6 @@
 from random import shuffle
-from carte import Carte, COLOR_EMOJI, VALUE_EMOJI, Color
-from utils import append_line, remove_last_line, check_belotte, who_wins_trick
+from carte import Carte, Color
+from utils import append_line, remove_last_line, check_belotte, who_wins_trick, delete_message
 from anounce import Anounce
 
 
@@ -58,14 +58,14 @@ class Coinche():
     async def bet(self, ctx, goal: int, trump, capot=False, generale=False):
         # Check if we are in Bet Phase
         if not self.bet_phase:
-            await ctx.message.delete()
+            await delete_message(ctx.message)
             await ctx.channel.send("La phase d'annonces est terminée " +
                                    ctx.author.mention, delete_after=5)
             return
 
         # Check if it is the author's turn
         if ctx.author != self.players[self.active_player_index]:
-            await ctx.message.delete()
+            await delete_message(ctx.message)
             await ctx.channel.send("C'est pas à toi d'annoncer " + ctx.author.mention, delete_after=5)
             return
 
@@ -84,7 +84,7 @@ class Coinche():
             if self.pass_counter == 3 and self.anounce is not None:
                 self.bet_phase = False
                 await append_line(self.annonce_msg, "Fin des annonces")
-                await ctx.message.delete()
+                await delete_message(ctx.message)
                 # Start the play phase
                 await self.setup_play()
                 return
@@ -92,20 +92,20 @@ class Coinche():
             # Move to next player
             self.active_player_index = (self.active_player_index + 1) % 4
             await append_line(self.annonce_msg, " - " + self.players[self.active_player_index].mention + " : ?")
-            await ctx.message.delete()
+            await delete_message(ctx.message)
             return
 
         # Then it is a normal bet. Try to cast it in an announce
         try:
             anounce = Anounce(goal, trump, capot, generale)
         except KeyError:
-            await ctx.message.delete()
+            await delete_message(ctx.message)
             await ctx.channel.send("C'est pas une annonce valide.", delete_after=5)
             return
 
         # If the player did not bet enough
         if anounce < self.anounce:
-            await ctx.message.delete()
+            await delete_message(ctx.message)
             await ctx.channel.send("Il faut annoncer plus que l'annonce précédente...", delete_after=5)
             return
 
@@ -120,18 +120,18 @@ class Coinche():
         # Move to next player
         self.active_player_index = (self.active_player_index + 1) % 4
         await append_line(self.annonce_msg, " - " + self.players[self.active_player_index].mention + " : ?")
-        await ctx.message.delete()
+        await delete_message(ctx.message)
 
     async def annonce(self, ctx, goal: int, trump, capot=False, generale=False):
         if self.bet_phase is False:
-            await ctx.message.delete()
+            await delete_message(ctx.message)
             await ctx.channel.send("Les annonces sont déjà faites !", delete_after=5)
             return
 
         try:
             self.anounce = Anounce(goal, trump, capot, generale)
         except KeyError:
-            await ctx.message.delete()
+            await delete_message(ctx.message)
             await ctx.channel.send("C'est pas une annonce valide", delete_after=5)
             return
 
@@ -248,7 +248,7 @@ class Coinche():
     async def play(self, ctx, value, trump):
         # Check if we are in play phase
         if self.bet_phase is True:
-            await ctx.message.delete()
+            await delete_message(ctx.message)
             await ctx.channel.send(ctx.author.mention + " on est dans la phase d'annonce, c'est pas le moment", delete_after=5)
             return
 
@@ -256,7 +256,7 @@ class Coinche():
         try:
             carte = Carte(value, trump)
         except KeyError:
-            await ctx.message.delete()
+            await delete_message(ctx.message)
             await ctx.channel.send(ctx.author.mention + "J'ai pas compris ta carte !", delete_after=5)
             return
 
@@ -265,13 +265,13 @@ class Coinche():
 
         # Check if it is player's turn
         if player_index != self.active_player_index:
-            await ctx.message.delete()
+            await delete_message(ctx.message)
             await ctx.channel.send(player.mention + " ce n'est pas ton tour !", delete_after=5)
             return
 
         # Check if player has this card in hand
         if carte not in self.hands[player]:
-            await ctx.message.delete()
+            await delete_message(ctx.message)
             await ctx.channel.send(player.mention + " tu n'as pas cette carte dans ta main...", delete_after=5)
             return
 
@@ -290,7 +290,7 @@ class Coinche():
         await append_line(self.active_trick_msg, " - " + self.players[local_active_player_index].mention + " : ?")
 
         # Delete the author's message
-        await ctx.message.delete()
+        await delete_message(ctx.message)
 
         # Move to next player in the global value now that
         # the modifications are done
@@ -385,7 +385,7 @@ class Coinche():
 
         # Delete the hand messages
         for p in self.hands_msg:
-            await self.hands_msg[p].delete()
+            await delete_message(self.hands_msg[p])
         self.hands_msg = {}
 
         await self.channel.send("Pour relancer une partie, entrez `!again`")
@@ -396,11 +396,11 @@ class Coinche():
 
         # Delete hands if remaining
         for p in self.hands_msg:
-            await self.hands_msg[p].delete()
+            await delete_message(self.hands_msg[p])
 
         # Delete all common messages
         async for m in self.channel.history():
-            await m.delete()
+            await delete_message(m)
 
         # Reset all the variables but not the global score
         self.deck = Carte.full_deck()
