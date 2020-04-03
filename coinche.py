@@ -402,7 +402,6 @@ class Coinche():
             await delete_message(m)
 
         # Reset all the variables but not the global score
-        self.deck = Carte.full_deck()
         self.anounce = None
         self.taker_index = 0
         self.hands = {}
@@ -431,8 +430,8 @@ class Coinche():
 
     async def swap(self, player, target):
         if player not in self.players:
-            self.channel.send("{} est pas un·e joueureuse de cette partie".format(
-                player.mention), delete_after=5)
+            self.channel.send(
+                "Seul un·e joueureuse peut faire ça", delete_after=5)
             return
 
         # Change the entry in self.players
@@ -452,3 +451,26 @@ class Coinche():
         # Send notification
         self.channel.send("{} a laissé sa place à {} !".format(
             player.mention, target.mention), delete_after=5)
+
+    async def surrender(self, player):
+        if player not in self.players:
+            self.channel.send(
+                "Seul un·e joueureuse peut faire ça", delete_after=5)
+            return
+
+        self.channel.send("{} abandonne. ")
+
+        # The player that surrenders is now the one on defense
+        self.taker_index = (self.players[player] + 1) % 4
+
+        # Give the remaining hands to the new attacker
+        for p in self.players:
+            self.cards_won[self.players[self.taker_index]] += self.hands[p]
+
+        # Set the goal to zero so that the attack wins
+        self.anounce.goal = 0
+        self.anounce.capot = False
+        self.anounce.generale = False
+
+        # Trigger end game
+        await self.end_game()

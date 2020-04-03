@@ -246,6 +246,17 @@ async def clean(ctx):
         await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
 
 
+@bot.command(aliases=["nomore"])
+async def surrender(ctx):
+    global tables
+    try:
+        table = tables[ctx.channel.id]
+        await table.surrender(ctx.author)
+    except KeyError:
+        await delete_message(ctx.message)
+        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
+
+
 @bot.command()
 async def roll(ctx, txt):
     try:
