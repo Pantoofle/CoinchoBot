@@ -257,10 +257,15 @@ class Coinche():
             carte = Carte(value, trump)
         except KeyError:
             await delete_message(ctx.message)
-            await ctx.channel.send(ctx.author.mention + "J'ai pas compris ta carte !", delete_after=5)
+            await ctx.channel.send("J'ai pas compris ta carte !", delete_after=5)
             return
 
-        player_index = self.players.index(ctx.author)
+        try:
+            player_index = self.players.index(ctx.author)
+        except KeyError:
+            await delete_message(ctx.message)
+            await ctx.channel.send("Tu es pas joueur ici. Juste spectateur")
+            return
         player = ctx.author
 
         # Check if it is player's turn
