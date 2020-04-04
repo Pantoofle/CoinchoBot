@@ -59,6 +59,12 @@ class Coinche():
         await self.deal()
 
     async def bet(self, ctx, goal: int, trump, capot=False, generale=False):
+        # Check if author is a player
+        if not ctx.author in self.players:
+            await delete_message(ctx.message)
+            await ctx.channel.send("Les spectateurs ne sont pas autorisés à annoncer.", delete_after=5)
+            return
+
         # Check if we are in Bet Phase
         if not self.bet_phase:
             await delete_message(ctx.message)
@@ -126,6 +132,12 @@ class Coinche():
         await delete_message(ctx.message)
 
     async def coinche(self, ctx):
+        # Check if author is a player
+        if not ctx.author in self.players:
+            await delete_message(ctx.message)
+            await ctx.channel.send("Les spectateurs ne sont pas autorisés à coincher.", delete_after=5)
+            return
+
         # Check if we are in Bet Phase
         if not self.bet_phase:
             await delete_message(ctx.message)
