@@ -223,12 +223,12 @@ async def update_tables(guild):
             txt += "\n - [{}] : ".format(str(index))
             txt += " | ".join([p.mention for p in table.players])
         except KeyError:
-            print("Table {} plus active. Suppression de l'index".format(index))
             tables_down.append(index)
 
     for index in tables_down:
         if index != "next":
             index_to_id.pop(index)
+            print("Table {} plus active. Suppression de l'index".format(index))
 
     if tables_msg is None:
         chan = discord.utils.find(

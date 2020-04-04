@@ -462,7 +462,7 @@ class Coinche():
         self.channel.send("{} abandonne.")
 
         # The player that surrenders is now the one on defense
-        self.taker_index = (self.players[player] + 1) % 4
+        self.taker_index = (self.players.index(player) + 1) % 4
 
         # Give the remaining hands to the new attacker
         for p in self.players:
