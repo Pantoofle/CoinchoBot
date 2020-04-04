@@ -159,5 +159,4 @@ class Carte():
             force += 10
 
         # Results : Trump AND Color > Trump > Color > Nothing
-        print(self, " vaut ", str(force))
         return force
