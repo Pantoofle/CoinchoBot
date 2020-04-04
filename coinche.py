@@ -431,7 +431,7 @@ class Coinche():
 
     async def swap(self, player, target):
         if player not in self.players:
-            self.channel.send(
+            await self.channel.send(
                 "Seul un·e joueureuse peut faire ça", delete_after=5)
             return
 
@@ -443,14 +443,14 @@ class Coinche():
         self.hands[target] = self.hands.pop(player)
 
         # Send the new hand
-        self.hands_msg[target] = target.send("__**Ta main**__")
-        self.update_player_hand(target)
+        self.hands_msg[target] = await target.send("__**Ta main**__")
+        await self.update_player_hand(target)
 
         # Delete the old hand
-        delete_message(self.hands_msg.pop(player))
+        await delete_message(self.hands_msg.pop(player))
 
         # Send notification
-        self.channel.send("{} a laissé sa place à {} !".format(
+        await self.channel.send("{} a laissé sa place à {} !".format(
             player.mention, target.mention), delete_after=5)
 
     async def surrender(self, player):
