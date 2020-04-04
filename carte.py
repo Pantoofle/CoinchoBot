@@ -112,9 +112,6 @@ class Carte():
     def __eq__(self, other):
         return self.value == other.value and self.color == other.color
 
-    def is_trump(self, trump):
-        return self.trump.name.lower() == trump.lower()
-
     def full_deck():
         return [Carte(v, c) for c in Color for v in Value]
 
@@ -131,8 +128,8 @@ class Carte():
                 Value.Huit,
                 Value.Sept]
 
-    def points(self, trump):
-        if self.color == trump:
+    def points(self, trumps):
+        if self.color in trumps:
             if self.value == Value.Valet:
                 return 20
             elif self.value == Value.Neuf:
