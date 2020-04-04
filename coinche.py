@@ -11,7 +11,8 @@ class Coinche():
         self.channel = channel
         self.vocal = vocal_channel
         self.players = players
-        self.deck = shuffle(Carte.full_deck())
+        self.deck = Carte.full_deck()
+        shuffle(self.deck)
         self.anounce = None
         self.bet_phase = True
         self.pass_counter = 0
