@@ -7,6 +7,7 @@ class Anounce():
         self.trump = COLOR_DICT[trump.capitalize()]
         self.capot = capot
         self.generale = generale
+        self.coinchee = False
 
     def __lt__(self, other):
         if other is None:
@@ -21,7 +22,15 @@ class Anounce():
             r = "Capot "
         elif self.generale:
             r = "Générale "
-        return r + str(self.trump)
+
+        c = ""
+        if self.coinchee:
+            c = " coinchée"
+
+        return r + str(self.trump) + c
+
+    def coinche(self):
+        self.coinchee = True
 
     def count_points(self, cards_won, players):
         cards = [cards_won[p] for p in players]
