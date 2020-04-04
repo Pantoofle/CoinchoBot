@@ -17,7 +17,10 @@ class Anounce():
         self.generale = generale
         self.coinchee = False
         trump = trump.capitalize()
-        self.trumps = TRUMP_DICT.get(trump, [COLOR_DICT[trump]])
+        try:
+            self.trumps = TRUMP_DICT[trump]
+        except KeyError:
+            self.trumps = [COLOR_DICT[trump]]
 
     def __lt__(self, other):
         if other is None:
