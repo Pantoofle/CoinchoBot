@@ -125,6 +125,43 @@ class Coinche():
         await append_line(self.annonce_msg, " - " + self.players[self.active_player_index].mention + " : ?")
         await delete_message(ctx.message)
 
+    async def coinche(self, ctx):
+        # Check if we are in Bet Phase
+        if not self.bet_phase:
+            await delete_message(ctx.message)
+            await ctx.channel.send("La phase d'annonces est terminée " +
+                                   ctx.author.mention, delete_after=5)
+            return
+
+        # Check if there's something to coinche
+        if self.anounce is None:
+            await delete_message(ctx.message)
+            await ctx.channel.send("Il n'y a pas d'annonce à coincher pour le moment.", delete_after=5)
+            return
+
+        # Check if the player is in opposite team from the taker (i.e he can coinche)
+        if (self.taker_index)%2 == (self.players.index(ctx.author))%2:
+            await delete_message(ctx.message)
+            await ctx.channel.send("Ton équipe a proposé le dernier contrat. Tu ne peux pas coincher "
+                                    + ctx.author.mention, delete_after=5)
+            return
+
+        # Coinche the last anounce
+        self.anounce.coinche()
+
+        # Update message
+        await remove_last_line(self.annonce_msg)
+        await append_line(self.annonce_msg, " - " + ctx.author.mention + " : Coinchée")
+
+        self.bet_phase = False
+
+        await append_line(self.annonce_msg, "Fin des annonces")
+        await delete_message(ctx.message)
+
+        # Start the play phase
+        await self.setup_play()
+        return
+
     async def annonce(self, ctx, goal: int, trump, capot=False, generale=False):
         if self.bet_phase is False:
             await delete_message(ctx.message)

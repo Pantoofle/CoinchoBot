@@ -110,6 +110,20 @@ async def bet(ctx, goal: str, trump: str):
     # Send the goal
     await table.bet(ctx, goal, trump, capot=capot, generale=generale)
 
+@bot.command()
+async def coinche(ctx):
+    global tables
+
+    # Find the table
+    try:
+        table = tables[ctx.channel.id]
+    except KeyError:
+        await delete_message(ctx.message)
+        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
+        return
+
+    # Try to coinche the last bet
+    await table.coinche(ctx)
 
 @bot.command(name="pass", aliases=["nik"])
 async def pass_annonce(ctx):
