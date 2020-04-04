@@ -141,22 +141,23 @@ class Carte():
 
     def strength(self, trumps, color):
         # Start with the base strength of the card
-        str = self.value.value
+        force = self.value.value
 
         # Bonus if it is a trump
         if self.color in trumps:
-            str += 20
+            force += 20
             # More bonus so that V and 9 are the strongest trumps
             if self.value == Value.Valet:
                 # Set the card strength to 10, As is at 8, normal Valet is at 4
-                str += 6
+                force += 6
             if self.value == Value.Neuf:
                 # Set the card strength to 9, As is at 8, normal 9 is at 3
-                str += 6
+                force += 6
 
         # Bonus if you are the asked color
         if self.color == color:
-            str += 10
+            force += 10
 
         # Results : Trump AND Color > Trump > Color > Nothing
-        return str
+        print(self, " vaut ", str(force))
+        return force
