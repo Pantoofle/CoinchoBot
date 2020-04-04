@@ -15,7 +15,10 @@ async def remove_last_line(msg):
     await msg.edit(content=content)
 
 
-def check_belotte(hands, trump):
+def check_belotte(hands, trumps):
+    if len(trumps) != 1:
+        return False
+    trump = trumps[0]
     for hand in hands:
         if (Carte(Value.Dame, trump) in hand
                 and Carte(Value.Roi, trump) in hand):
@@ -23,13 +26,13 @@ def check_belotte(hands, trump):
     return False
 
 
-def who_wins_trick(stack, trump):
+def who_wins_trick(stack, trumps):
     # Get the stack color
     color = stack[0][0].color
 
     # Sort the cards by strength
     stack = sorted(stack,
-                   key=lambda entry: entry[0].strength(trump, color))
+                   key=lambda entry: entry[0].strength(trumps, color))
 
     # Find the winner
     return stack[-1][1]

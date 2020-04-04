@@ -1,13 +1,23 @@
-from carte import COLOR_DICT
+from carte import COLOR_DICT, Color
+
+TRUMP_DICT = {
+    "Ta": [Color.Pique, Color.Coeur, Color.Trefle, Color.Carreau],
+    "Toutat": [Color.Pique, Color.Coeur, Color.Trefle, Color.Carreau],
+    "Toutatout": [Color.Pique, Color.Coeur, Color.Trefle, Color.Carreau],
+    "Sa": [],
+    "Sansat": [],
+    "Sansatout": []
+}
 
 
 class Anounce():
     def __init__(self, goal, trump, capot, generale):
         self.goal = int(goal)
-        self.trump = COLOR_DICT[trump.capitalize()]
         self.capot = capot
         self.generale = generale
         self.coinchee = False
+        trump = trump.capitalize()
+        self.trumps = TRUMP_DICT.get(trump, COLOR_DICT[trump])
 
     def __lt__(self, other):
         if other is None:
@@ -27,7 +37,15 @@ class Anounce():
         if self.coinchee:
             c = " coinchée"
 
-        return r + str(self.trump) + c
+        t = ""
+        if len(self.trumps) == 0:
+            t = "Sans Atout"
+        elif len(self.trumps) == 4:
+            t = "Tout Atout"
+        else:
+            t = str(self.trumps[0])
+
+        return r + t + c
 
     def coinche(self):
         self.coinchee = True
@@ -35,7 +53,7 @@ class Anounce():
     def count_points(self, cards_won, players):
         cards = [cards_won[p] for p in players]
         # Count the number of tricks and points of each player
-        points = [sum([c.points(self.trump) for c in stack])
+        points = [sum([c.points(self.trumps) for c in stack])
                   for stack in cards]
         tricks = [len(stack)//4 for stack in cards]
         return [(p, t) for p, t in zip(points, tricks)]

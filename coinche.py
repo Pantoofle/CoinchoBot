@@ -140,10 +140,10 @@ class Coinche():
             return
 
         # Check if the player is in opposite team from the taker (i.e he can coinche)
-        if (self.taker_index)%2 == (self.players.index(ctx.author))%2:
+        if (self.taker_index) % 2 == (self.players.index(ctx.author)) % 2:
             await delete_message(ctx.message)
             await ctx.channel.send("Ton équipe a proposé le dernier contrat. Tu ne peux pas coincher "
-                                    + ctx.author.mention, delete_after=5)
+                                   + ctx.author.mention, delete_after=5)
             return
 
         # Coinche the last anounce
@@ -228,7 +228,7 @@ class Coinche():
         # Sort the hands with the new trump value
         for player in self.hands:
             self.hands[player].sort(
-                key=lambda c: c.strength(self.anounce.trump, None),
+                key=lambda c: c.strength(self.anounce.trumps, None),
                 reverse=True)
             await self.update_player_hand(player)
 
@@ -255,7 +255,7 @@ class Coinche():
         # Check for belotte
         team = self.taker_index % 2
         hands = [self.hands[p] for p in self.players[0 + team::2]]
-        if check_belotte(hands, self.anounce.trump):
+        if check_belotte(hands, self.anounce.trumps):
             print("Belotte détectée pour la team " + str(team))
             if team == 0:
                 self.pointsA += 20
@@ -344,7 +344,7 @@ class Coinche():
 
     async def gather(self):
         # Find the winner
-        winner = who_wins_trick(self.active_trick, self.anounce.trump)
+        winner = who_wins_trick(self.active_trick, self.anounce.trumps)
         winner_index = self.players.index(winner)
         await self.channel.send("Pli remporté par " + winner.mention, delete_after=5)
 
