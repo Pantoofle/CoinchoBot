@@ -213,6 +213,7 @@ async def update_tables(guild):
     global tables
     global tables_msg
     txt = "__**Tables actives : **__"
+    tables_down = []
     for index in index_to_id:
         id = index_to_id[index]
         try:
@@ -221,7 +222,10 @@ async def update_tables(guild):
             txt += " | ".join([p.mention for p in table.players])
         except KeyError:
             print("Table {} plus active. Suppression de l'index".format(index))
-            index_to_id.pop(index)
+            tables_down.append(index)
+
+    for index in tables_down:
+        index_to_id.pop(index)
 
     if tables_msg is None:
         chan = discord.utils.find(
