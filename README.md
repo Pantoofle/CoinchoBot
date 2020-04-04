@@ -16,3 +16,5 @@ You will need :
 # Thanks
 
 Many thanks to my beta-test team. You rock !
+
+And to the contributors !
