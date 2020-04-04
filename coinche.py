@@ -455,11 +455,11 @@ class Coinche():
 
     async def surrender(self, player):
         if player not in self.players:
-            self.channel.send(
+            await self.channel.send(
                 "Seul un·e joueureuse peut faire ça", delete_after=5)
             return
 
-        self.channel.send("{} abandonne.")
+        await self.channel.send("{} abandonne.")
 
         # The player that surrenders is now the one on defense
         self.taker_index = (self.players.index(player) + 1) % 4
