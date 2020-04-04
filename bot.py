@@ -212,6 +212,8 @@ async def swap(ctx, target: discord.Member):
 async def update_tables(guild):
     global tables
     global tables_msg
+    global index_to_id
+
     txt = "__**Tables actives : **__"
     tables_down = []
     for index in index_to_id:
@@ -225,7 +227,8 @@ async def update_tables(guild):
             tables_down.append(index)
 
     for index in tables_down:
-        index_to_id.pop(index)
+        if index != "next":
+            index_to_id.pop(index)
 
     if tables_msg is None:
         chan = discord.utils.find(
