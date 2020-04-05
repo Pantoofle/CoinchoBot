@@ -22,12 +22,12 @@ class Anounce():
         except KeyError:
             self.trumps = [COLOR_DICT[trump]]
 
-    def __lt__(self, other):
+    def __le__(self, other):
         if other is None:
             goal = 0
         else:
             goal = other.goal
-        return self.goal < goal
+        return self.goal <= goal
 
     def __str__(self):
         r = str(self.goal) + " "
