@@ -113,7 +113,7 @@ class Coinche():
             return
 
         # If the player did not bet enough
-        if anounce < self.anounce:
+        if anounce <= self.anounce:
             await delete_message(ctx.message)
             await ctx.channel.send("Il faut annoncer plus que l'annonce précédente...", delete_after=5)
             return
