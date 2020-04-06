@@ -301,7 +301,7 @@ class Coinche():
             await ctx.channel.send(ctx.author.mention + " on est dans la phase d'annonce, c'est pas le moment", delete_after=5)
             return
 
-        # Try to parse the cardr
+        # Try to parse the cards
         try:
             carte = Carte(value, trump)
         except KeyError:
