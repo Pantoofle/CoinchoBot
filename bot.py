@@ -80,7 +80,7 @@ async def annonce(ctx, goal: int, trump: str):
         await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
 
 
-@bot.command()
+@bot.command(aliases=["b"])
 async def bet(ctx, goal: str, trump: str):
     global tables
 
