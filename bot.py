@@ -110,6 +110,7 @@ async def bet(ctx, goal: str, trump: str):
     # Send the goal
     await table.bet(ctx, goal, trump, capot=capot, generale=generale)
 
+
 @bot.command()
 async def coinche(ctx):
     global tables
@@ -124,6 +125,7 @@ async def coinche(ctx):
 
     # Try to coinche the last bet
     await table.coinche(ctx)
+
 
 @bot.command(name="pass", aliases=["nik"])
 async def pass_annonce(ctx):
@@ -216,11 +218,13 @@ async def swap(ctx, target: discord.Member):
     try:
         table = tables[ctx.channel.id]
         await table.swap(ctx.author, target)
-        await delete_message(ctx.message)
-        await update_tables(ctx.guild)
     except KeyError:
-        await delete_message(ctx.message)
         await ctx.channel.send("Je peux pas faire ça hors d'un chan de coinche", delete_after=5)
+        await delete_message(ctx.message)
+        return
+
+    await update_tables(ctx.guild)
+    await delete_message(ctx.message)
 
 
 async def update_tables(guild):
