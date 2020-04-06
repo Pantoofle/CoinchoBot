@@ -503,15 +503,16 @@ class Coinche():
         index = self.players.index(player)
         self.players[index] = target
 
-        # Change the hands
-        self.hands[target] = self.hands.pop(player)
+        # Change the hands if there is one
+        if player in self.hands:
+            self.hands[target] = self.hands.pop(player)
 
-        # Send the new hand
-        self.hands_msg[target] = await target.send("__**Ta main**__")
-        await self.update_player_hand(target)
+            # Send the new hand
+            self.hands_msg[target] = await target.send("__**Ta main**__")
+            await self.update_player_hand(target)
 
-        # Delete the old hand
-        await delete_message(self.hands_msg.pop(player))
+            # Delete the old hand
+            await delete_message(self.hands_msg.pop(player))
 
         # Send notification
         await self.channel.send("{} a laissé sa place à {} !".format(
