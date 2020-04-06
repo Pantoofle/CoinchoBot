@@ -77,6 +77,28 @@ CARD_POINTS = {
     Value.Sept: 0
 }
 
+SA_POINTS = {
+    Value.As: 19,
+    Value.Dix: 10,
+    Value.Roi: 4,
+    Value.Dame: 3,
+    Value.Valet: 2,
+    Value.Neuf: 0,
+    Value.Huit: 0,
+    Value.Sept: 0
+}
+
+TA_POINTS = {
+    Value.Valet: 14,
+    Value.Neuf: 9,
+    Value.As: 6,
+    Value.Dix: 5,
+    Value.Roi: 3,
+    Value.Dame: 1,
+    Value.Huit: 0,
+    Value.Sept: 0
+}
+
 VALUE_EMOJI = {
     Value.As: ":regional_indicator_a:",
     Value.Dix: ":keycap_ten:",
@@ -129,15 +151,23 @@ class Carte():
                 Value.Sept]
 
     def points(self, trumps):
-        if self.color in trumps:
-            if self.value == Value.Valet:
-                return 20
-            elif self.value == Value.Neuf:
-                return 14
-            else:
-                return CARD_POINTS[self.value]
-        else:
+        # If there's a single trump
+        if len(trumps) == 1:
+            if self.color == trumps[0]:
+                if self.value == Value.Valet:
+                    return 20
+                elif self.value == Value.Neuf:
+                    return 14
+
             return CARD_POINTS[self.value]
+
+        # All trumps
+        elif len(trumps) == 4:
+            return TA_POINTS[self.value]
+
+        # No trump
+        else:
+            return SA_POINTS[self.value]
 
     def strength(self, trumps, color):
         # Start with the base strength of the card
