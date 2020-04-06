@@ -1,7 +1,7 @@
 from random import shuffle
 from carte import Carte, Color
 from utils import append_line, remove_last_line, check_belotte, \
-                  who_wins_trick, InvalidCardError, valid_card
+    who_wins_trick, InvalidCardError, valid_card
 from utils import delete_message, shuffle_deck, deal_deck
 from anounce import Anounce
 
@@ -465,6 +465,9 @@ class Coinche():
         # Delete all common messages
         async for m in self.channel.history():
             await delete_message(m)
+
+        # Gather the cards to a new deck
+        self.deck = sum([self.cards_won[p] for p in self.cards_won], [])
 
         # Reset all the variables but not the global score
         self.anounce = None
