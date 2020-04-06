@@ -1,6 +1,7 @@
 from random import shuffle
 from carte import Carte, Color
-from utils import append_line, remove_last_line, check_belotte, who_wins_trick
+from utils import append_line, remove_last_line, check_belotte, \
+                  who_wins_trick, InvalidCardError, valid_card
 from utils import delete_message, shuffle_deck, deal_deck
 from anounce import Anounce
 
@@ -301,7 +302,7 @@ class Coinche():
             await ctx.channel.send(ctx.author.mention + " on est dans la phase d'annonce, c'est pas le moment", delete_after=5)
             return
 
-        # Try to parse the cardr
+        # Try to parse the cards
         try:
             carte = Carte(value, trump)
         except KeyError:
@@ -329,7 +330,16 @@ class Coinche():
             await ctx.channel.send(player.mention + " tu n'as pas cette carte dans ta main...", delete_after=5)
             return
 
-        # Then, the card is valid, play it
+        # Check if player is allowed to play this card
+        try:
+            trick_cards = [c for (c, _) in self.active_trick]
+            valid_card(carte, trick_cards, self.anounce.trumps,
+                       self.hands[player])
+        except InvalidCardError as e:
+            await delete_message(ctx.message)
+            await ctx.channel.send(player.mention + " " + e.args[0], delete_after=5)
+            return
+
         # Remove it from the player's hand
         self.hands[player].remove(carte)
         await self.update_player_hand(player)
