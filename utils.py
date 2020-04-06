@@ -68,3 +68,51 @@ def deal_deck(deck):
         deck = deck[2:]
 
     return hands
+
+
+class InvalidCardError(Exception):
+    pass
+
+
+def valid_card(carte, trick, trumps, player_hand):
+    """Check if the player has the right to play `carte`.
+    If so, returns.
+    If not, raises an InvalideCardError with an error message that will be
+    displayed in the channel.
+    """
+    # No card has been played, so the player can play anything.
+    if trick == []:
+        return
+
+    color = trick[0].color
+    has_trumps = any([c.color in trumps for c in player_hand])
+    has_color = any([c.color == color for c in player_hand])
+    # The highest card played in the trick:
+    highest_trick = max([c.strength(trumps, color) for c in trick])
+    # The highest card in the player's hand:
+    highest_player = max([c.strength(trumps, color) for c in player_hand])
+
+    if color in trumps:
+        if not has_color:
+            return
+        if carte.color != color:
+            raise InvalidCardError("tu dois jouer à la couleur demandée.")
+        if carte.strength(trumps, color) < highest_trick < highest_player:
+            raise InvalidCardError("tu dois monter à l'atout.")
+
+    else:
+        if has_color:
+            if carte.color != color:
+                raise InvalidCardError("tu dois jouer à la couleur demandée.")
+        else:
+            if len(trick) >= 2 and \
+               trick[-2].strength(trumps, color) == highest_trick:
+                # The partner has played the highest card in the trick, so the
+                # player can play anything.
+                return None
+            if not has_trumps:
+                return
+            if carte.color not in trumps:
+                raise InvalidCardError("tu dois couper à l'atout.")
+            if carte.strength(trumps, color) < highest_trick < highest_player:
+                raise InvalidCardError("tu dois monter à l'atout.")
