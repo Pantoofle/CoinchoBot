@@ -83,10 +83,8 @@ class Anounce():
         return [(p, t) for p, t in zip(points, tricks)]
 
     def who_wins_game(self, results, pointsA, pointsB, taker_index):
-        print(results, pointsA, pointsB, taker_index)
         # Check generale : taker takes all the tricks
         if self.generale:
-            print("Générale !")
             if results[taker_index][1] == 8:
                 return taker_index % 2
             else:
@@ -94,14 +92,12 @@ class Anounce():
 
         # Check capot : team taker takes all the tricks
         if self.capot:
-            print("Capot !")
             if results[taker_index][1] + results[(taker_index + 2) % 4][1] == 8:
                 return taker_index % 2
             else:
                 return (taker_index + 1) % 2
 
         # Else it is a normal game
-        print("Partie normale")
         team_points = [pointsA, pointsB][taker_index % 2]
 
         if team_points >= self.goal:
