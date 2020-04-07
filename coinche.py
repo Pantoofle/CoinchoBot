@@ -321,9 +321,6 @@ class Coinche():
         await append_line(self.active_trick_msg, " - " + player.mention + " : " + str(carte))
         await append_line(self.active_trick_msg, " - " + self.players[local_active_player_index].mention + " : ?")
 
-        # Delete the author's message
-        await delete_message(ctx.message)
-
         # Move to next player in the global value now that
         # the modifications are done
         self.active_player_index = local_active_player_index

@@ -156,6 +156,7 @@ async def pass_annonce(ctx):
 @bot.command(name="p")
 async def play(ctx, value, *args):
     global tables
+    await delete_message(ctx.message)
     # Find the table
     try:
         table = tables[ctx.channel.id]
