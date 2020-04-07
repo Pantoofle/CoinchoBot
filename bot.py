@@ -296,17 +296,27 @@ async def clean(ctx):
     global bot
     await delete_message(ctx.message)
 
-    # Find the table
-    try:
-        table = tables[ctx.channel.id]
-    except KeyError:
-        await invalidChannelMessage(ctx.channel)
-        return
+    # If used in a normal channel
+    if type(ctx.channel) == discord.TextChannel:
+        # Find the table
+        try:
+            table = tables[ctx.channel.id]
+        except KeyError:
+            # If table not found, it may be a DM
+            await invalidChannelMessage(ctx.channel)
+            return
 
-    # Delete all messages not from CoinchoBot
-    async for m in table.channel.history():
-        if m.author != bot.user:
-            await delete_message(m)
+        # Delete all messages not from CoinchoBot
+        async for m in table.channel.history():
+            if m.author != bot.user:
+                await delete_message(m)
+
+    # If used in a Direct Message Channel
+    elif type(ctx.channel) == discord.DMChannel:
+        # Delete the messages from coinchoBot (old hands)
+        async for m in table.channel.history():
+            if m.author == bot.user:
+                await delete_message(m)
 
 
 @bot.command(aliases=["nomore"])
