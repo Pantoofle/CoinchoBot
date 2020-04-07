@@ -466,6 +466,10 @@ class Coinche():
             raise InvalidActorError(
                 "C'est au joueur de swap. Pas au spectateur")
 
+        if target in self.players:
+            raise InvalidActionError(
+                "On échange avec un spectateur. Pas un joueur")
+
         # Change the entry in self.players
         index = self.players.index(player)
         self.players[index] = target
