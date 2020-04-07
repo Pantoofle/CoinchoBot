@@ -171,7 +171,7 @@ class Coinche():
             raise InvalidMomentError("Les annonces sont déjà faites")
 
         if ctx.author not in self.players:
-            raise InvalidActorError("Seul un joueru peut annoncer")
+            raise InvalidActorError("Seul un joueur peut annoncer")
 
         self.anounce = Anounce(goal, trump, capot, generale)
         self.taker_index = self.players.index(ctx.author)
