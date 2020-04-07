@@ -202,7 +202,7 @@ async def end(ctx):
         await invalidChannelMessage(ctx.channel)
         return
 
-    await table.end()
+    await table.end_table()
 
     # Clean the table from the index and update it
     del tables[ctx.channel.id]
