@@ -20,7 +20,7 @@ index_to_id = {}
 index_to_id["next"] = 1
 
 
-def InvalidCommandError(Exception):
+class InvalidCommandError(Exception):
     pass
 
 
@@ -30,6 +30,7 @@ async def invalidChannelMessage(channel):
 
 async def handleGenericError(e, channel):
     await channel.send(e.args[0], delete_after=5)
+    print("ERROR : " + str(e))
 
 
 @bot.command()
