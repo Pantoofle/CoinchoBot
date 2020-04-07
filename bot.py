@@ -1,8 +1,8 @@
 import discord
 from discord.ext import commands
 import random
-from utils import delete_message
 
+from utils import delete_message
 from coinche import Coinche
 
 
@@ -18,6 +18,14 @@ tables_msg = None
 INDEX_CHAN = "tables-actives"
 index_to_id = {}
 index_to_id["next"] = 1
+
+
+async def invalidChannelMessage(channel):
+    await channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
+
+
+async def handleGenericError(e, channel):
+    await channel.send(e.args[0], delete_after=5)
 
 
 @bot.command()
@@ -72,159 +80,184 @@ async def start(ctx, p2: discord.Member, p3: discord.Member, p4: discord.Member)
 @bot.command()
 async def annonce(ctx, goal: int, trump: str):
     global tables
+    await delete_message(ctx.message)
+
+    # Find the table
     try:
         table = tables[ctx.channel.id]
-        await table.annonce(ctx, goal, trump)
     except KeyError:
-        await delete_message(ctx.message)
-        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
+        await invalidChannelMessage(ctx.channel)
+        return
+
+    # Send the anounce
+    try:
+        await table.annonce(ctx, goal, trump)
+    except Exception as e:
+        handleGenericError(e, ctx.channel)
+        return
 
 
 @bot.command(aliases=["b"])
 async def bet(ctx, goal: str, trump: str):
     global tables
+    await delete_message(ctx.message)
 
     # Find the table
     try:
         table = tables[ctx.channel.id]
     except KeyError:
-        await delete_message(ctx.message)
-        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
+        await invalidChannelMessage(ctx.channel)
         return
 
-    # Parse the goal
-    capot = (goal == "capot")
-    generale = (goal == "generale")
-    if capot or generale:
-        goal = 182
-        if generale:
-            goal += 1
-    else:
-        try:
-            goal = int(goal)
-        except ValueError:
-            await delete_message(ctx.message)
-            await ctx.channel.send("J'ai pas compris ton annonce...", delete_after=5)
-            return
-
     # Send the goal
-    await table.bet(ctx, goal, trump, capot=capot, generale=generale)
+    try:
+        await table.bet(ctx, goal, trump)
+    except Exception as e:
+        handleGenericError(e, ctx.channel)
 
 
 @bot.command()
 async def coinche(ctx):
     global tables
+    await delete_message(ctx.message)
 
     # Find the table
     try:
         table = tables[ctx.channel.id]
     except KeyError:
-        await delete_message(ctx.message)
-        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
+        await invalidChannelMessage(ctx.channel)
         return
 
     # Try to coinche the last bet
-    await table.coinche(ctx)
+    try:
+        await table.coinche(ctx)
+    except Exception as e:
+        handleGenericError(e, ctx.channel)
 
 
 @bot.command(name="pass", aliases=["nik"])
 async def pass_annonce(ctx):
     global tables
+    await delete_message(ctx.message)
+
+    # Find the table
     try:
         table = tables[ctx.channel.id]
-        await table.bet(ctx, 0, None)
     except KeyError:
-        await delete_message(ctx.message)
-        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
+        await invalidChannelMessage(ctx.channel)
+        return
+
+    try:
+        await table.bet(ctx, 0, None)
+    except Exception as e:
+        handleGenericError(e, ctx.channel)
 
 
 @bot.command(name="p")
 async def play(ctx, value, *args):
     global tables
-    color = args[-1]
+    # Find the table
     try:
         table = tables[ctx.channel.id]
+    except KeyError:
+        await invalidChannelMessage(ctx.channel)
+        return
+
+    try:
+        color = args[-1]
         # If we are un bet phase, consider !p as a bet
         if table.bet_phase:
             await bet(ctx, value, color)
-            return
-        await table.play(ctx, value, color)
-    except KeyError:
-        await delete_message(ctx.message)
-        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
+        else:
+            await table.play(ctx, value, color)
+    except Exception as e:
+        handleGenericError(e, ctx.channel)
 
 
 @bot.command(aliases=["akor"])
 async def again(ctx):
     global tables
+    await delete_message(ctx.message)
+
+    # Find the table
     try:
         table = tables[ctx.channel.id]
-        await table.reset()
     except KeyError:
-        await delete_message(ctx.message)
-        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
+        await invalidChannelMessage(ctx.channel)
+        return
+
+    try:
+        await table.reset()
+    except Exception as e:
+        handleGenericError(e, ctx.channel)
 
 
 @bot.command()
 async def end(ctx):
     global tables
+    # Find the table
     try:
         table = tables[ctx.channel.id]
-        chan = table.channel
-        await delete_message(table.vocal)
-        for p in table.hands_msg:
-            await delete_message(table.hands_msg[p])
-        del tables[ctx.channel.id]
-        await chan.send("Cloture de la table. Merci d'avoir joué !", delete_after=5)
-        await delete_message(chan)
-        await update_tables(ctx.guild)
     except KeyError:
-        await delete_message(ctx.message)
-        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
+        await invalidChannelMessage(ctx.channel)
+        return
+
+    await table.end()
+
+    # Clean the table from the index and update it
+    del tables[ctx.channel.id]
+    await update_tables(ctx.guild)
 
 
 @bot.command()
 async def spectate(ctx, index: int):
     global tables
+    await delete_message(ctx.message)
+
+    # Parse the table ID
     try:
         id = index_to_id[index]
         table = tables[id]
-        await table.channel.set_permissions(ctx.author, read_messages=True)
-        await table.vocal.set_permissions(ctx.author, view_channel=True)
-        await table.channel.send("{} a rejoint en tant que spectateurice !".format(ctx.author.mention))
-        await delete_message(ctx.message)
     except KeyError:
-        await delete_message(ctx.message)
         await ctx.channel.send("Je reconnais pas l'id de la table", delete_after=5)
+        return
+
+    await table.add_spectator(ctx.author)
 
 
 @bot.command()
 async def leave(ctx):
     global tables
+    await delete_message(ctx.message)
+
+    # Find the table
     try:
         table = tables[ctx.channel.id]
-        await table.channel.set_permissions(ctx.author, read_messages=False)
-        await table.vocal.set_permissions(ctx.author, view_channel=False)
-        await table.channel.send("{} n'est plus spectateurice !".format(ctx.author.mention))
-        await delete_message(ctx.message)
     except KeyError:
-        await delete_message(ctx.message)
-        await ctx.channel.send("Je peux pas faire ça hors d'un chan de coinche", delete_after=5)
+        await invalidChannelMessage(ctx.channel)
+        return
+
+    await table.remove_spectator(ctx.author)
 
 
 @bot.command()
 async def swap(ctx, target: discord.Member):
     global tables
+    await delete_message(ctx.message)
+
+    # Find the table
     try:
         table = tables[ctx.channel.id]
-        await table.swap(ctx.author, target)
     except KeyError:
-        await ctx.channel.send("Je peux pas faire ça hors d'un chan de coinche", delete_after=5)
-        await delete_message(ctx.message)
+        await invalidChannelMessage(ctx.channel)
         return
 
+    try:
+        await table.swap(ctx.author, target)
+    except Exception as e:
+        await handleGenericError(e, ctx.channel)
+
     await update_tables(ctx.guild)
-    await delete_message(ctx.message)
 
 
 async def update_tables(guild):
@@ -260,26 +293,37 @@ async def update_tables(guild):
 async def clean(ctx):
     global tables
     global bot
+    await delete_message(ctx.message)
+
+    # Find the table
     try:
         table = tables[ctx.channel.id]
-        # Delete all messages not from CoinchoBot
-        async for m in table.channel.history():
-            if m.author != bot.user:
-                await delete_message(m)
     except KeyError:
-        await delete_message(ctx.message)
-        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
+        await invalidChannelMessage(ctx.channel)
+        return
+
+    # Delete all messages not from CoinchoBot
+    async for m in table.channel.history():
+        if m.author != bot.user:
+            await delete_message(m)
 
 
 @bot.command(aliases=["nomore"])
 async def surrender(ctx):
     global tables
+    await delete_message(ctx.message)
+
+    # Find the table
     try:
         table = tables[ctx.channel.id]
-        await table.surrender(ctx.author)
     except KeyError:
-        await delete_message(ctx.message)
-        await ctx.channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
+        await invalidChannelMessage(ctx.channel)
+        return
+
+    try:
+        await table.surrender(ctx.author)
+    except Exception as e:
+        await handleGenericError(e, ctx.channel)
 
 
 @bot.command()

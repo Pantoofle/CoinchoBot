@@ -1,4 +1,4 @@
-from carte import Carte, Value
+from carte import Carte, Value, InvalidCardError
 import discord
 from random import randint
 
@@ -68,10 +68,6 @@ def deal_deck(deck):
         deck = deck[2:]
 
     return hands
-
-
-class InvalidCardError(Exception):
-    pass
 
 
 def valid_card(carte, trick, trumps, player_hand):

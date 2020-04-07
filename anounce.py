@@ -10,17 +10,38 @@ TRUMP_DICT = {
 }
 
 
+class InvalidAnounceError(Exception):
+    pass
+
+
 class Anounce():
-    def __init__(self, goal, trump, capot, generale):
+    def __init__(self, goal, trump):
+        # Parse the goal
+        self.capot = (goal == "capot")
+        self.generale = (goal == "generale")
+        if self.capot or self.generale:
+            goal = 182
+            if self.generale:
+                goal += 1
+        else:
+            try:
+                goal = int(goal)
+            except ValueError:
+                raise InvalidAnounceError("Valeur de l'annonce non reconnue")
+
         self.goal = int(goal)
-        self.capot = capot
-        self.generale = generale
+
         self.coinchee = False
+
+        # Parse the trump
         trump = trump.capitalize()
         try:
             self.trumps = TRUMP_DICT[trump]
         except KeyError:
-            self.trumps = [COLOR_DICT[trump]]
+            try:
+                self.trumps = [COLOR_DICT[trump]]
+            except KeyError:
+                raise InvalidAnounceError("Atout non reconnu")
 
     def __le__(self, other):
         if other is None:

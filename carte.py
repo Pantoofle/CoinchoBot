@@ -118,12 +118,27 @@ COLOR_EMOJI = {
 }
 
 
+class InvalidCardError(Exception):
+    pass
+
+
 class Carte():
     def __init__(self, value, color):
+        # Parse the value
         if type(value) == str:
-            value = VALUE_DICT[value.capitalize()]
+            try:
+                value = VALUE_DICT[value.capitalize()]
+            except KeyError:
+                raise InvalidCardError(
+                    "J'ai pas compris la valeur de ta carte")
+
+        # Parse the color
         if type(color) == str:
-            color = COLOR_DICT[color.capitalize()]
+            try:
+                color = COLOR_DICT[color.capitalize()]
+            except KeyError:
+                raise InvalidCardError(
+                    "J'ai pas compris la couleur de ta carte")
 
         self.color = color
         self.value = value

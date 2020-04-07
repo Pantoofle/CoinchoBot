@@ -1,9 +1,21 @@
 from random import shuffle
-from carte import Carte, Color
+from carte import Carte, Color, InvalidCardError
 from utils import append_line, remove_last_line, check_belotte, \
-    who_wins_trick, InvalidCardError, valid_card
+    who_wins_trick, valid_card
 from utils import delete_message, shuffle_deck, deal_deck
-from anounce import Anounce
+from anounce import Anounce, InvalidAnounceError
+
+
+class InvalidActorError(Exception):
+    pass
+
+
+class InvalidMomentError(Exception):
+    pass
+
+
+class InvalidActionError(Exception):
+    pass
 
 
 class Coinche():
@@ -61,23 +73,20 @@ class Coinche():
 
     async def bet(self, ctx, goal: int, trump, capot=False, generale=False):
         # Check if author is a player
-        if not ctx.author in self.players:
-            await delete_message(ctx.message)
-            await ctx.channel.send("Les spectateurs ne sont pas autorisés à annoncer.", delete_after=5)
-            return
+        if ctx.author not in self.players:
+            raise InvalidActorError(
+                "Les spectateurs ne sont pas autorisés à annoncer.")
 
         # Check if we are in Bet Phase
         if not self.bet_phase:
-            await delete_message(ctx.message)
-            await ctx.channel.send("La phase d'annonces est terminée " +
-                                   ctx.author.mention, delete_after=5)
-            return
+            raise InvalidMomentError(
+                "Tu ne peux pas faire ça hors de la phase d'annonce " +
+                ctx.author.mention)
 
         # Check if it is the author's turn
         if ctx.author != self.players[self.active_player_index]:
-            await delete_message(ctx.message)
-            await ctx.channel.send("C'est pas à toi d'annoncer " + ctx.author.mention, delete_after=5)
-            return
+            raise InvalidActorError(
+                "C'est pas à toi d'annoncer " + ctx.author.mention)
 
         # If goal is 0, the player passed
         if goal == 0:
@@ -94,7 +103,6 @@ class Coinche():
             if self.pass_counter == 3 and self.anounce is not None:
                 self.bet_phase = False
                 await append_line(self.annonce_msg, "Fin des annonces")
-                await delete_message(ctx.message)
                 # Start the play phase
                 await self.setup_play()
                 return
@@ -102,22 +110,15 @@ class Coinche():
             # Move to next player
             self.active_player_index = (self.active_player_index + 1) % 4
             await append_line(self.annonce_msg, " - " + self.players[self.active_player_index].mention + " : ?")
-            await delete_message(ctx.message)
             return
 
         # Then it is a normal bet. Try to cast it in an announce
-        try:
-            anounce = Anounce(goal, trump, capot, generale)
-        except KeyError:
-            await delete_message(ctx.message)
-            await ctx.channel.send("C'est pas une annonce valide.", delete_after=5)
-            return
+        anounce = Anounce(goal, trump, capot, generale)
 
         # If the player did not bet enough
         if anounce <= self.anounce:
-            await delete_message(ctx.message)
-            await ctx.channel.send("Il faut annoncer plus que l'annonce précédente...", delete_after=5)
-            return
+            raise InvalidAnounceError(
+                "Il faut annoncer plus que l'annonce précédente")
 
         self.pass_counter = 0
         self.anounce = anounce
@@ -130,34 +131,26 @@ class Coinche():
         # Move to next player
         self.active_player_index = (self.active_player_index + 1) % 4
         await append_line(self.annonce_msg, " - " + self.players[self.active_player_index].mention + " : ?")
-        await delete_message(ctx.message)
 
     async def coinche(self, ctx):
         # Check if author is a player
-        if not ctx.author in self.players:
-            await delete_message(ctx.message)
-            await ctx.channel.send("Les spectateurs ne sont pas autorisés à coincher.", delete_after=5)
-            return
+        if ctx.author not in self.players:
+            raise InvalidActorError(
+                "Les spectateurs ne sont pas autorisés à coincher")
 
         # Check if we are in Bet Phase
         if not self.bet_phase:
-            await delete_message(ctx.message)
-            await ctx.channel.send("La phase d'annonces est terminée " +
-                                   ctx.author.mention, delete_after=5)
-            return
+            raise InvalidMomentError("La phase d'annonces est terminée")
 
         # Check if there's something to coinche
         if self.anounce is None:
-            await delete_message(ctx.message)
-            await ctx.channel.send("Il n'y a pas d'annonce à coincher pour le moment.", delete_after=5)
-            return
+            raise InvalidMomentError(
+                "Il n'y a pas d'annonce à coincher pour le moment")
 
         # Check if the player is in opposite team from the taker (i.e he can coinche)
         if (self.taker_index) % 2 == (self.players.index(ctx.author)) % 2:
-            await delete_message(ctx.message)
-            await ctx.channel.send("Ton équipe a proposé le dernier contrat. Tu ne peux pas coincher "
-                                   + ctx.author.mention, delete_after=5)
-            return
+            raise InvalidActorError(
+                "Ton équipe a proposé le dernier contrat. Tu ne peux pas coincher")
 
         # Coinche the last anounce
         self.anounce.coinche()
@@ -169,27 +162,19 @@ class Coinche():
         self.bet_phase = False
 
         await append_line(self.annonce_msg, "Fin des annonces")
-        await delete_message(ctx.message)
 
         # Start the play phase
         await self.setup_play()
-        return
 
     async def annonce(self, ctx, goal: int, trump, capot=False, generale=False):
         if self.bet_phase is False:
-            await delete_message(ctx.message)
-            await ctx.channel.send("Les annonces sont déjà faites !", delete_after=5)
-            return
+            raise InvalidMomentError("Les annonces sont déjà faites")
 
-        try:
-            self.anounce = Anounce(goal, trump, capot, generale)
-        except KeyError:
-            await delete_message(ctx.message)
-            await ctx.channel.send("C'est pas une annonce valide", delete_after=5)
-            return
+        if ctx.author not in self.players:
+            raise InvalidActorError("Seul un joueru peut annoncer")
 
+        self.anounce = Anounce(goal, trump, capot, generale)
         self.taker_index = self.players.index(ctx.author)
-        await ctx.message.delete(delay=5)
         self.bet_phase = False
 
         await self.setup_play()
@@ -269,7 +254,6 @@ class Coinche():
         team = self.taker_index % 2
         hands = [self.hands[p] for p in self.players[0 + team::2]]
         if check_belotte(hands, self.anounce.trumps):
-            print("Belotte détectée pour la team " + str(team))
             if team == 0:
                 self.pointsA += 20
             if team == 1:
@@ -298,53 +282,37 @@ class Coinche():
     async def play(self, ctx, value, trump):
         # Check if we are in play phase
         if self.bet_phase is True:
-            await delete_message(ctx.message)
-            await ctx.channel.send(ctx.author.mention + " on est dans la phase d'annonce, c'est pas le moment", delete_after=5)
-            return
+            raise InvalidMomentError("Impossible en phase d'annonce")
 
-        # Try to parse the cards
-        try:
-            carte = Carte(value, trump)
-        except KeyError:
-            await delete_message(ctx.message)
-            await ctx.channel.send("J'ai pas compris ta carte !", delete_after=5)
-            return
+        if ctx.author not in self.players:
+            raise InvalidActorError("Un spectateur ne peut pas jouer de carte")
 
-        try:
-            player_index = self.players.index(ctx.author)
-        except KeyError:
-            await delete_message(ctx.message)
-            await ctx.channel.send("Tu es pas joueur ici. Juste spectateur")
-            return
+        # Find the player
         player = ctx.author
+        player_index = self.players.index(player)
 
         # Check if it is player's turn
         if player_index != self.active_player_index:
-            await delete_message(ctx.message)
-            await ctx.channel.send(player.mention + " ce n'est pas ton tour !", delete_after=5)
-            return
+            raise InvalidMomentError("Ce n'est pas ton tour de jouer")
+
+        # Parse the cards
+        carte = Carte(value, trump)
 
         # Check if player has this card in hand
         if carte not in self.hands[player]:
-            await delete_message(ctx.message)
-            await ctx.channel.send(player.mention + " tu n'as pas cette carte dans ta main...", delete_after=5)
-            return
+            raise InvalidCardError("Tu n'as pas cette carte en main")
 
         # Check if player is allowed to play this card
-        try:
-            trick_cards = [c for (c, _) in self.active_trick]
-            valid_card(carte, trick_cards, self.anounce.trumps,
-                       self.hands[player])
-        except InvalidCardError as e:
-            await delete_message(ctx.message)
-            await ctx.channel.send(player.mention + " " + e.args[0], delete_after=5)
-            return
+        trick_cards = [c for (c, _) in self.active_trick]
+        valid_card(carte, trick_cards, self.anounce.trumps, self.hands[player])
 
         # Remove it from the player's hand
         self.hands[player].remove(carte)
         await self.update_player_hand(player)
+
         # Add it to the stack
         self.active_trick.append((carte, player))
+
         # Move to next player but only localy, to avoid multiple parallel modification
         local_active_player_index = (self.active_player_index + 1) % 4
 
@@ -498,9 +466,8 @@ class Coinche():
 
     async def swap(self, player, target):
         if player not in self.players:
-            await self.channel.send(
-                "Seul un·e joueureuse peut faire ça", delete_after=5)
-            return
+            raise InvalidActorError(
+                "C'est au joueur de swap. Pas au spectateur")
 
         # Change the entry in self.players
         index = self.players.index(player)
@@ -523,16 +490,14 @@ class Coinche():
 
     async def surrender(self, player):
         if player not in self.players:
-            await self.channel.send(
-                "Seul un·e joueureuse peut faire ça", delete_after=5)
-            return
+            raise InvalidActorError("Seul un joueur peut abandonner")
 
         await self.channel.send("{} abandonne.".format(player.mention))
 
-        # The player that surrenders is now the one on defense
+        # The player that surrenders is now the one on defence
         self.taker_index = (self.players.index(player) + 1) % 4
 
-        # Give the active trick to the attacker
+        # Give the active trick to the new attacker
         self.cards_won[self.players[self.taker_index]
                        ] += [c for (c, p) in self.active_trick]
 
@@ -547,3 +512,28 @@ class Coinche():
 
         # Trigger end game
         await self.end_game()
+
+    async def end_table(self):
+        await self.channel.send("Cloture de la table. Merci d'avoir joué !", delete_after=5)
+
+        # Clean the hand messages
+        for p in self.hands_msg:
+            await delete_message(self.hands_msg[p])
+
+        # Clean the channels
+        await delete_message(self.vocal)
+        await delete_message(self.channel)
+
+    async def add_spectator(self, target):
+        # Set permissions
+        await self.channel.set_permissions(target, read_messages=True)
+        await self.vocal.set_permissions(target, view_channel=True)
+        # Notify users
+        await self.channel.send("{} a rejoint en tant que spectateurice !".format(target.mention))
+
+    async def remove_spectator(self, target):
+        # Set permissions
+        await self.channel.set_permissions(target, read_messages=False)
+        await self.vocal.set_permissions(target, view_channel=False)
+        # Notify
+        await self.channel.send("{} n'est plus spectateurice !".format(target.mention))
