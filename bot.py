@@ -20,6 +20,10 @@ index_to_id = {}
 index_to_id["next"] = 1
 
 
+def InvalidCommandError(Exception):
+    pass
+
+
 async def invalidChannelMessage(channel):
     await channel.send("Tu peux pas faire ça hors d'un channel de coinche...", delete_after=5)
 
@@ -165,7 +169,10 @@ async def play(ctx, value, *args):
         return
 
     try:
-        color = args[-1]
+        try:
+            color = args[-1]
+        except IndexError:
+            raise InvalidCommandError("Utilisation : `!p <valeur> <couleur>`")
         # If we are un bet phase, consider !p as a bet
         if table.bet_phase:
             await bet(ctx, value, color)
@@ -296,27 +303,18 @@ async def clean(ctx):
     global bot
     await delete_message(ctx.message)
 
-    # If used in a normal channel
-    if type(ctx.channel) == discord.TextChannel:
-        # Find the table
-        try:
-            table = tables[ctx.channel.id]
-        except KeyError:
-            # If table not found, it may be a DM
-            await invalidChannelMessage(ctx.channel)
-            return
+    # Find the table
+    try:
+        table = tables[ctx.channel.id]
+    except KeyError:
+        # If table not found, it may be a DM
+        await invalidChannelMessage(ctx.channel)
+        return
 
-        # Delete all messages not from CoinchoBot
-        async for m in table.channel.history():
-            if m.author != bot.user:
-                await delete_message(m)
-
-    # If used in a Direct Message Channel
-    elif type(ctx.channel) == discord.DMChannel:
-        # Delete the messages from coinchoBot (old hands)
-        async for m in table.channel.history():
-            if m.author == bot.user:
-                await delete_message(m)
+    # Delete all messages not from CoinchoBot
+    async for m in table.channel.history():
+        if m.author != bot.user:
+            await delete_message(m)
 
 
 @bot.command(aliases=["nomore"])
