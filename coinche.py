@@ -71,7 +71,7 @@ class Coinche():
         self.bet_phase = True
         await self.deal()
 
-    async def bet(self, ctx, goal: int, trump, capot=False, generale=False):
+    async def bet(self, ctx, goal: int, trump):
         # Check if author is a player
         if ctx.author not in self.players:
             raise InvalidActorError(
@@ -113,7 +113,7 @@ class Coinche():
             return
 
         # Then it is a normal bet. Try to cast it in an announce
-        anounce = Anounce(goal, trump, capot, generale)
+        anounce = Anounce(goal, trump)
 
         # If the player did not bet enough
         if anounce <= self.anounce:
