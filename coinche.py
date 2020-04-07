@@ -532,6 +532,10 @@ class Coinche():
         # The player that surrenders is now the one on defense
         self.taker_index = (self.players.index(player) + 1) % 4
 
+        # Give the active trick to the attacker
+        self.cards_won[self.players[self.taker_index]
+                       ] += [c for (c, p) in self.active_trick]
+
         # Give the remaining hands to the new attacker
         for p in self.players:
             self.cards_won[self.players[self.taker_index]] += self.hands[p]
