@@ -93,7 +93,7 @@ async def annonce(ctx, goal: int, trump: str):
     try:
         await table.annonce(ctx, goal, trump)
     except Exception as e:
-        handleGenericError(e, ctx.channel)
+        await handleGenericError(e, ctx.channel)
         return
 
 
@@ -113,7 +113,7 @@ async def bet(ctx, goal: str, trump: str):
     try:
         await table.bet(ctx, goal, trump)
     except Exception as e:
-        handleGenericError(e, ctx.channel)
+        await handleGenericError(e, ctx.channel)
 
 
 @bot.command()
@@ -132,7 +132,7 @@ async def coinche(ctx):
     try:
         await table.coinche(ctx)
     except Exception as e:
-        handleGenericError(e, ctx.channel)
+        await handleGenericError(e, ctx.channel)
 
 
 @bot.command(name="pass", aliases=["nik"])
@@ -150,7 +150,7 @@ async def pass_annonce(ctx):
     try:
         await table.bet(ctx, 0, None)
     except Exception as e:
-        handleGenericError(e, ctx.channel)
+        await handleGenericError(e, ctx.channel)
 
 
 @bot.command(name="p")
@@ -171,7 +171,7 @@ async def play(ctx, value, *args):
         else:
             await table.play(ctx, value, color)
     except Exception as e:
-        handleGenericError(e, ctx.channel)
+        await handleGenericError(e, ctx.channel)
 
 
 @bot.command(aliases=["akor"])
@@ -189,7 +189,7 @@ async def again(ctx):
     try:
         await table.reset()
     except Exception as e:
-        handleGenericError(e, ctx.channel)
+        await handleGenericError(e, ctx.channel)
 
 
 @bot.command()
