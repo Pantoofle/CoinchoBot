@@ -464,7 +464,8 @@ class Coinche():
         self.dealer_index = (self.dealer_index + 1) % 4
 
         # Delete all common messages
-        await self.channel.delete_messages(list(self.channel.history()))
+        async for m in self.channel.history():
+            await delete_message(m)
 
         # Delete all hands messages
         for p in self.hands_msg:
