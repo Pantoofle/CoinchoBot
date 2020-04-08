@@ -15,6 +15,13 @@ async def remove_last_line(msg):
     await msg.edit(content=content)
 
 
+async def modify_line(msg, index, newline):
+    content = msg.content.split("\n")
+    content[index] = newline
+    content = "\n".join(content)
+    await msg.edit(content=content)
+
+
 def check_belotte(hands, trumps):
     if len(trumps) != 1:
         return False
