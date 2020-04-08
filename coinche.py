@@ -402,8 +402,8 @@ class Coinche():
         else:
             # Reset actual trick
             leader = self.players[self.leader_index]
-            await self.active_trick_msg.edit(TRICK_DEFAULT_MSG)
-            await modify_line(active_trick_msg, 1,
+            await self.active_trick_msg.edit(content=TRICK_DEFAULT_MSG)
+            await modify_line(self.active_trick_msg, 1,
                               f" - {leader.mention} : ?")
 
             # Update number of points of each team
