@@ -2,7 +2,7 @@ from random import shuffle
 from threading import Lock
 
 from carte import Carte, Color, InvalidCardError
-from utils import append_line, remove_last_line, check_belotte, \
+from utils import append_line, remove_last_line, modify_line, check_belotte, \
     who_wins_trick, valid_card
 from utils import delete_message, shuffle_deck, deal_deck
 from anounce import Anounce, InvalidAnounceError
@@ -18,6 +18,13 @@ class InvalidMomentError(Exception):
 
 class InvalidActionError(Exception):
     pass
+
+
+TRICK_DEFAULT_MSG = """__**Pli actuel :**__
+ - ...
+ - ...
+ - ...
+ - ..."""
 
 
 class Coinche():
@@ -266,7 +273,10 @@ class Coinche():
         # Last trick message
         self.last_trick_msg = await self.channel.send("__**Dernier pli :**__")
         # Active trick message
-        self.active_trick_msg = await self.channel.send("__**Pli actuel :**__\n- " + self.players[self.active_player_index].mention + " : ?")
+        self.active_trick_msg = await self.channel.send(TRICK_DEFAULT_MSG)
+        first_player = self.players[self.active_player_index]
+        await modify_line(self.active_trick_msg, 1,
+                          f" - {first_player.mention} : ?")
 
         # Check for belotte
         team = self.taker_index % 2
@@ -340,17 +350,21 @@ class Coinche():
         local_active_player_index = (self.active_player_index + 1) % 4
 
         # Update the message with the curent trick
-        await remove_last_line(self.active_trick_msg)
-        await append_line(self.active_trick_msg, " - " + player.mention + " : " + str(carte))
-        await append_line(self.active_trick_msg, " - " + self.players[local_active_player_index].mention + " : ?")
-
-        # Move to next player in the global value now that
-        # the modifications are done
-        self.active_player_index = local_active_player_index
+        cards_played = len(self.active_trick)
+        await modify_line(self.active_trick_msg, cards_played,
+                          f" - {player.mention} : {carte}")
 
         # If we have 4 cards in the stack, trigger the gathering
-        if len(self.active_trick) == 4:
+        if cards_played == 4:
             await self.gather()
+        else:
+            # Move to next player in the global value now that
+            # the modifications are done
+            self.active_player_index = local_active_player_index
+            # Update the message and notify the next player
+            next_player = self.players[self.active_player_index]
+            await modify_line(self.active_trick_msg, cards_played + 1,
+                              f" - {next_player.mention} : ?")
 
     async def gather(self):
         # Find the winner
@@ -361,7 +375,7 @@ class Coinche():
         # Move actual trick to last trick message
         text = self.active_trick_msg.content.split("\n")
         text[0] = "__**Dernier pli :**__"
-        text[-1] = "Pli remporté par " + winner.mention
+        text.append("Pli remporté par " + winner.mention)
         text = "\n".join(text)
         await self.last_trick_msg.edit(content=text)
 
@@ -386,9 +400,10 @@ class Coinche():
             await self.end_game()
         else:
             # Reset actual trick
-            await self.active_trick_msg.edit(
-                content="__**Pli actuel :**__\n- "
-                + self.players[self.leader_index].mention + " : ?")
+            leader = self.players[self.leader_index]
+            await self.active_trick_msg.edit(TRICK_DEFAULT_MSG)
+            await modify_line(active_trick_msg, 1,
+                              f" - {leader.mention} : ?")
 
             # Update number of points of each team
             await self.update_tricks()
