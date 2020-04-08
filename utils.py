@@ -1,4 +1,4 @@
-from carte import Carte, Value, InvalidCardError
+from carte import Carte, Value
 import discord
 from random import randint
 
@@ -77,15 +77,18 @@ def deal_deck(deck):
     return hands
 
 
+# The different possibilities if someone tries to play a card:
+OK = 0
+WRONG_COLOR = 1
+TRUMP = 2
+LOW_TRUMP = 3
+
+
 def valid_card(carte, trick, trumps, player_hand):
-    """Check if the player has the right to play `carte`.
-    If so, returns.
-    If not, raises an InvalideCardError with an error message that will be
-    displayed in the channel.
-    """
+    """Check if the player has the right to play `carte`."""
     # No card has been played, so the player can play anything.
     if trick == []:
-        return
+        return OK
 
     color = trick[0].color
     has_trumps = any([c.color in trumps for c in player_hand])
@@ -97,25 +100,25 @@ def valid_card(carte, trick, trumps, player_hand):
 
     if color in trumps:
         if not has_color:
-            return
+            return OK
         if carte.color != color:
-            raise InvalidCardError("tu dois jouer à la couleur demandée.")
+            return WRONG_COLOR
         if carte.strength(trumps, color) < highest_trick < highest_player:
-            raise InvalidCardError("tu dois monter à l'atout.")
+            return LOW_TRUMP
 
     else:
         if has_color:
             if carte.color != color:
-                raise InvalidCardError("tu dois jouer à la couleur demandée.")
+                return WRONG_COLOR
         else:
             if len(trick) >= 2 and \
                trick[-2].strength(trumps, color) == highest_trick:
                 # The partner has played the highest card in the trick, so the
                 # player can play anything.
-                return None
+                return OK
             if not has_trumps:
-                return
+                return OK
             if carte.color not in trumps:
-                raise InvalidCardError("tu dois couper à l'atout.")
+                return TRUMP
             if carte.strength(trumps, color) < highest_trick < highest_player:
-                raise InvalidCardError("tu dois monter à l'atout.")
+                return LOW_TRUMP

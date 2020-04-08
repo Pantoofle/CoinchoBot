@@ -3,7 +3,7 @@ from asyncio import Lock
 
 from carte import Carte, Color, InvalidCardError
 from utils import append_line, remove_last_line, modify_line, check_belotte, \
-    who_wins_trick, valid_card
+    who_wins_trick, valid_card, OK, WRONG_COLOR, TRUMP, LOW_TRUMP
 from utils import delete_message, shuffle_deck, deal_deck
 from anounce import Anounce, InvalidAnounceError
 
@@ -316,16 +316,34 @@ class Coinche():
         if player_index != self.active_player_index:
             raise InvalidMomentError("Ce n'est pas ton tour de jouer")
 
-        # Parse the cards
-        carte = Carte(value, trump)
+        if (value, trump) == (None, None):
+            trick_cards = [c for (c, _) in self.active_trick]
+            possible = [c for c in self.hands[player]
+                        if valid_card(c, trick_cards, self.anounce.trumps,
+                                      self.hands[player]) == OK]
+            if len(possible) != 1:
+                raise InvalidActionError(
+                        "La commande `!p` n'est valable que quand il n'y a "
+                        "qu'une seule carte que tu peux jouer.")
+            carte = possible[0]
+        else:
+            # Parse the cards
+            carte = Carte(value, trump)
 
-        # Check if player has this card in hand
-        if carte not in self.hands[player]:
-            raise InvalidCardError("Tu n'as pas cette carte en main")
+            # Check if player has this card in hand
+            if carte not in self.hands[player]:
+                raise InvalidCardError("Tu n'as pas cette carte en main")
 
-        # Check if player is allowed to play this card
-        trick_cards = [c for (c, _) in self.active_trick]
-        valid_card(carte, trick_cards, self.anounce.trumps, self.hands[player])
+            # Check if player is allowed to play this card
+            trick_cards = [c for (c, _) in self.active_trick]
+            res = valid_card(carte, trick_cards, self.anounce.trumps,
+                             self.hands[player])
+            if res == WRONG_COLOR:
+                raise InvalidCardError("Tu dois jouer à la couleur demandée.")
+            elif res == TRUMP:
+                raise InvalidCardError("Tu dois couper à l'atout.")
+            elif res == LOW_TRUMP:
+                raise InvalidCardError("Tu dois monter à l'atout.")
 
         # Remove it from the player's hand
         self.hands[player].remove(carte)

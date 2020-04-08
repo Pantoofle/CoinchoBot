@@ -172,7 +172,7 @@ async def pass_annonce(ctx):
 
 
 @bot.command(name="p")
-async def play(ctx, value, *args):
+async def play(ctx, *args):
     global tables
     await delete_message(ctx.message)
     # Find the table
@@ -183,15 +183,23 @@ async def play(ctx, value, *args):
         return
 
     try:
-        try:
-            color = args[-1]
-        except IndexError:
-            raise InvalidCommandError("Utilisation : `!p <valeur> <couleur>`")
-        # If we are un bet phase, consider !p as a bet
+        # If we are in bet phase, consider !p as a bet
         if table.bet_phase:
-            async with table.lock:
-                await bet(ctx, value, color)
+            try:
+                value, color = args
+            except ValueError:
+                raise InvalidCommandError("Utilisation en phase d'annonce : "
+                                          "`!p <valeur> <atout>`")
+            await bet(ctx, value, color)
         else:
+            if len(args) == 0:
+                value, color = None, None
+            elif len(args) == 2:
+                value, color = args
+            else:
+                raise InvalidCommandError("Utilisation : `!p` ou "
+                                          "`!p <valeur> <couleur>`")
+
             async with table.lock:
                 await table.play(ctx, value, color)
     except Exception as e:
