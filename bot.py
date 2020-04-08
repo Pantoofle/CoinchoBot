@@ -312,10 +312,7 @@ async def clean(ctx):
         await invalidChannelMessage(ctx.channel)
         return
 
-    # Delete all messages not from CoinchoBot
-    async for m in table.channel.history():
-        if m.author != bot.user:
-            await delete_message(m)
+    await table.clean(bot.user)
 
 
 @bot.command(aliases=["nomore"])

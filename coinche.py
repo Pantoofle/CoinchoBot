@@ -575,3 +575,10 @@ class Coinche():
         await self.vocal.set_permissions(target, view_channel=False)
         # Notify
         await self.channel.send("{} n'est plus spectateurice !".format(target.mention))
+
+    @criticalOperation
+    async def clean(self, bot):
+        # Delete all messages not from CoinchoBot
+        async for m in self.channel.history():
+            if m.author != bot:
+                await delete_message(m)
