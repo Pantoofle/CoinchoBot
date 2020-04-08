@@ -105,7 +105,8 @@ async def annonce(ctx, goal: int, trump: str):
 
     # Send the anounce
     try:
-        await table.annonce(ctx, goal, trump)
+        async with table.lock:
+            await table.annonce(ctx, goal, trump)
     except Exception as e:
         await handleGenericError(e, ctx.channel)
         return
@@ -125,7 +126,8 @@ async def bet(ctx, goal: str, trump: str):
 
     # Send the goal
     try:
-        await table.bet(ctx, goal, trump)
+        async with table.lock:
+            await table.bet(ctx, goal, trump)
     except Exception as e:
         await handleGenericError(e, ctx.channel)
 
@@ -144,7 +146,8 @@ async def coinche(ctx):
 
     # Try to coinche the last bet
     try:
-        await table.coinche(ctx)
+        async with table.lock:
+            await table.coinche(ctx)
     except Exception as e:
         await handleGenericError(e, ctx.channel)
 
@@ -162,7 +165,8 @@ async def pass_annonce(ctx):
         return
 
     try:
-        await table.bet(ctx, 0, None)
+        async with table.lock:
+            await table.bet(ctx, 0, None)
     except Exception as e:
         await handleGenericError(e, ctx.channel)
 
@@ -185,9 +189,11 @@ async def play(ctx, value, *args):
             raise InvalidCommandError("Utilisation : `!p <valeur> <couleur>`")
         # If we are un bet phase, consider !p as a bet
         if table.bet_phase:
-            await bet(ctx, value, color)
+            async with table.lock:
+                await bet(ctx, value, color)
         else:
-            await table.play(ctx, value, color)
+            async with table.lock:
+                await table.play(ctx, value, color)
     except Exception as e:
         await handleGenericError(e, ctx.channel)
 
@@ -205,7 +211,8 @@ async def again(ctx):
         return
 
     try:
-        await table.reset()
+        async with table.lock:
+            await table.reset()
     except Exception as e:
         await handleGenericError(e, ctx.channel)
 
@@ -220,7 +227,8 @@ async def end(ctx):
         await invalidChannelMessage(ctx.channel)
         return
 
-    await table.end_table()
+    async with table.lock:
+        await table.end_table()
 
     # Clean the table from the index and update it
     del tables[ctx.channel.id]
@@ -271,7 +279,8 @@ async def swap(ctx, target: discord.Member):
         return
 
     try:
-        await table.swap(ctx.author, target)
+        async with table.lock:
+            await table.swap(ctx.author, target)
     except Exception as e:
         await handleGenericError(e, ctx.channel)
 
@@ -321,7 +330,8 @@ async def clean(ctx):
         await invalidChannelMessage(ctx.channel)
         return
 
-    await table.clean(bot.user)
+    async with table.lock:
+        await table.clean(bot.user)
 
 
 @bot.command(aliases=["nomore"])
@@ -337,7 +347,8 @@ async def surrender(ctx):
         return
 
     try:
-        await table.surrender(ctx.author)
+        async with table.lock:
+            await table.surrender(ctx.author)
     except Exception as e:
         await handleGenericError(e, ctx.channel)
 

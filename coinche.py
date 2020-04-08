@@ -1,5 +1,5 @@
 from random import shuffle
-from threading import Lock
+from asyncio import Lock
 
 from carte import Carte, Color, InvalidCardError
 from utils import append_line, remove_last_line, modify_line, check_belotte, \
@@ -28,15 +28,6 @@ TRICK_DEFAULT_MSG = """__**Pli actuel :**__
 
 
 class Coinche():
-
-    def criticalOperation(func):
-        async def wrapper(self, *args, **kwargs):
-            self.lock.acquire()
-            res = await func(self, *args, **kwargs)
-            self.lock.release()
-            return res
-        return wrapper
-
     def __init__(self, channel, vocal_channel, players, index):
         self.lock = Lock()
         self.index = index
@@ -68,7 +59,6 @@ class Coinche():
         self.active_player_index = 0
         self.leader_index = 0
 
-    @criticalOperation
     async def start(self):
         print("Début de partie. Il y a {} players, {} mains, {} messages, {} cartes"
               .format(len(self.players), len(self.hands),
@@ -95,7 +85,6 @@ class Coinche():
         self.bet_phase = True
         await self.deal()
 
-    @criticalOperation
     async def bet(self, ctx, goal: int, trump):
         # Check if author is a player
         if ctx.author not in self.players:
@@ -157,7 +146,6 @@ class Coinche():
         self.active_player_index = (self.active_player_index + 1) % 4
         await append_line(self.annonce_msg, " - " + self.players[self.active_player_index].mention + " : ?")
 
-    @criticalOperation
     async def coinche(self, ctx):
         # Check if author is a player
         if ctx.author not in self.players:
@@ -192,7 +180,6 @@ class Coinche():
         # Start the play phase
         await self.setup_play()
 
-    @criticalOperation
     async def annonce(self, ctx, goal: int, trump, capot=False, generale=False):
         if self.bet_phase is False:
             raise InvalidMomentError("Les annonces sont déjà faites")
@@ -313,7 +300,6 @@ class Coinche():
         self.pass_counter = 0
         self.bet_phase = True
 
-    @criticalOperation
     async def play(self, ctx, value, trump):
         # Check if we are in play phase
         if self.bet_phase is True:
@@ -459,7 +445,6 @@ class Coinche():
 
         await self.channel.send("Pour relancer une partie, entrez `!again`")
 
-    @criticalOperation
     async def reset(self):
         # Next dealer
         self.dealer_index = (self.dealer_index + 1) % 4
@@ -510,7 +495,6 @@ class Coinche():
 
         await self.start()
 
-    @criticalOperation
     async def swap(self, player, target):
         if player not in self.players:
             raise InvalidActorError(
@@ -543,7 +527,6 @@ class Coinche():
               .format(len(self.players), len(self.hands),
                       len(self.hands_msg), len(self.deck)))
 
-    @criticalOperation
     async def surrender(self, player):
         if player not in self.players:
             raise InvalidActorError("Seul un joueur peut abandonner")
@@ -595,7 +578,6 @@ class Coinche():
         # Notify
         await self.channel.send("{} n'est plus spectateurice !".format(target.mention))
 
-    @criticalOperation
     async def clean(self, bot):
         # Delete all messages not from CoinchoBot
         async for m in self.channel.history():
