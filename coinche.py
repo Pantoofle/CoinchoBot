@@ -28,10 +28,11 @@ TRICK_DEFAULT_MSG = """__**Pli actuel :**__
 
 
 class Coinche():
+
     def criticalOperation(func):
-        def wrapper(self, *args, **kwargs):
+        async def wrapper(self, *args, **kwargs):
             self.lock.acquire()
-            res = func(self, *args, **kwargs)
+            res = await func(self, *args, **kwargs)
             self.lock.release()
             return res
         return wrapper
