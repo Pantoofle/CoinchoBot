@@ -190,7 +190,7 @@ async def play(ctx, value, *args):
         # If we are un bet phase, consider !p as a bet
         if table.bet_phase:
             async with table.lock:
-                await bet(ctx, value, color)
+                await table.bet(ctx, value, color)
         else:
             async with table.lock:
                 await table.play(ctx, value, color)
