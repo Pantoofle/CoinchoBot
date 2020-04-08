@@ -31,8 +31,9 @@ class Coinche():
     def criticalOperation(func):
         def wrapper(self, *args, **kwargs):
             self.lock.acquire()
-            func(self, *args, **kwargs)
+            res = func(self, *args, **kwargs)
             self.lock.release()
+            return res
         return wrapper
 
     def __init__(self, channel, vocal_channel, players, index):
