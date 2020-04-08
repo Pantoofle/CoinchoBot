@@ -477,7 +477,8 @@ class Coinche():
         self.deck = sum([self.cards_won[p] for p in self.cards_won], [])
         # the cards in hand
         for h in self.hands:
-            self.deck += h
+            self.deck += self.hands[h]
+
         # the cards in trick
         self.deck += [c for (c, _) in self.active_trick]
 
