@@ -190,7 +190,8 @@ async def play(ctx, *args):
             except ValueError:
                 raise InvalidCommandError("Utilisation en phase d'annonce : "
                                           "`!p <valeur> <atout>`")
-            await bet(ctx, value, color)
+            async with table.lock:
+                await table.bet(ctx, value, color)
         else:
             if len(args) == 0:
                 value, color = None, None
