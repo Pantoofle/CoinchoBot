@@ -2,8 +2,9 @@ import discord
 from discord.ext import commands
 import random
 
-from utils import delete_message
-from coinche import Coinche
+from utils import delete_message, InvalidCardError
+from coinche import Coinche, InvalidActionError, InvalidActorError, InvalidMomentError
+from anounce import InvalidAnounceError
 
 
 # Load the bot token
@@ -19,6 +20,12 @@ INDEX_CHAN = "tables-actives"
 index_to_id = {}
 index_to_id["next"] = 1
 
+CONTROLED_ERRORS = [InvalidCardError,
+                    InvalidActionError,
+                    InvalidActorError,
+                    InvalidMomentError,
+                    InvalidAnounceError]
+
 
 class InvalidCommandError(Exception):
     pass
@@ -29,8 +36,10 @@ async def invalidChannelMessage(channel):
 
 
 async def handleGenericError(e, channel):
-    await channel.send(e.args[0], delete_after=5)
-    print("ERROR : " + str(e))
+    if type(e) in CONTROLED_ERRORS:
+        await channel.send(e.args[0], delete_after=5)
+    else:
+        raise e
 
 
 @bot.command()
