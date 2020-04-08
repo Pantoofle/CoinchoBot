@@ -24,7 +24,7 @@ class Coinche():
     def criticalOperation(func):
         def wrapper(self, *args, **kwargs):
             self.lock.acquire()
-            self.func(*args, **kwargs)
+            func(*args, **kwargs)
             self.lock.release()
         return wrapper
 
