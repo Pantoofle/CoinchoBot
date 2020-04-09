@@ -309,7 +309,7 @@ async def update_tables(guild):
         try:
             table = tables[id]
             txt += "\n - [{}] : ".format(str(index))
-            txt += " | ".join([p.mention for p in table.players])
+            txt += " | ".join([p.mention for p in table.all_players])
         except KeyError:
             tables_down.append(index)
 
