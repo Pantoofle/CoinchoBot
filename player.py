@@ -29,7 +29,7 @@ class Player():
         else:
             self.hand_msg = await self.user.send(txt)
 
-    def sort_hand(self, trumps=None):
+    def sort_hand(self, trumps=[]):
         self.hand.sort(
             key=lambda c: c.strength(trumps, None),
             reverse=True)
