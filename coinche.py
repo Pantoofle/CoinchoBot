@@ -1,11 +1,12 @@
 from random import shuffle
 from asyncio import Lock
 
-from carte import Carte, Color, InvalidCardError
+from carte import Carte, InvalidCardError
 from utils import append_line, remove_last_line, modify_line, check_belotte, \
     who_wins_trick, valid_card, OK, WRONG_COLOR, TRUMP, LOW_TRUMP
 from utils import delete_message, shuffle_deck, deal_deck
 from anounce import Anounce, InvalidAnounceError
+from player import Player
 
 
 class InvalidActorError(Exception):
@@ -33,37 +34,53 @@ class Coinche():
         self.index = index
         self.channel = channel
         self.vocal = vocal_channel
-        self.players = players
+
+        # Create the players
+        self.players = {}
+        for (index, user) in enumerate(players):
+            p = Player(user, index)
+            self.players[user] = p
+            self.players[index] = p
+
+        for (i, p) in enumerate(players):
+            self.players[p].next = self.players[(i+1) % 4]
+
+        self.all_players = [self.players[i] for i in range(4)]
+
+        # Generate the deck
         self.deck = Carte.full_deck()
         shuffle(self.deck)
+
+        # Variables for announces
         self.anounce = None
         self.bet_phase = True
         self.pass_counter = 0
         self.annonce_msg = None
-        self.dealer_index = 0
-        self.taker_index = 0
-        self.hands = {}
-        self.hands_msg = {}
+
+        # Score (number of games won)
         self.global_score_msg = None
-        self.global_score_A = 0
-        self.global_score_B = 0
+        self.global_score = [0, 0]
+
+        # Tricks (number of tricks won)
         self.trick_msg = None
-        self.trick_team_A = 0
-        self.trick_team_B = 0
-        self.cards_won = {}
-        self.pointsA = 0
-        self.pointsB = 0
+        self.tricks = [0, 0]
+
+        # Team points during a game
+        self.points = [0, 0]
+
+        # Past trick and active trick
         self.last_trick_msg = None
         self.active_trick_msg = None
         self.active_trick = []
-        self.active_player_index = 0
-        self.leader_index = 0
+
+        # Indexes
+        p0 = self.players[0]
+        self.active_player = p0
+        self.leader = p0
+        self.dealer = p0
+        self.taker = p0
 
     async def start(self):
-        print("Début de partie. Il y a {} players, {} mains, {} messages, {} cartes"
-              .format(len(self.players), len(self.hands),
-                      len(self.hands_msg), len(self.deck)))
-
         await self.channel.send("Début de partie ! {} | {} VS {} | {}".format(
             self.players[0].mention,
             self.players[2].mention,
@@ -77,11 +94,12 @@ class Coinche():
         txt = "Pour annoncer : `!bet <valeur> <atout>` ou `!pass`\nLes valeurs `generale` ou `capot` sont valides"
         await self.channel.send(txt)
 
+        # Anounce message
         self.annonce_msg = await self.channel.send(
             "__**Phase d'annonce :**__\n - " +
-            self.players[self.dealer_index].mention + " : ?")
+            self.dealer.mention + " : ?")
 
-        self.active_player_index = self.dealer_index
+        self.active_player = self.dealer
         self.bet_phase = True
         await self.deal()
 
@@ -98,7 +116,7 @@ class Coinche():
                 ctx.author.mention)
 
         # Check if it is the author's turn
-        if ctx.author != self.players[self.active_player_index]:
+        if ctx.author != self.active_player.user:
             raise InvalidActorError(
                 "C'est pas à toi d'annoncer " + ctx.author.mention)
 
@@ -122,8 +140,8 @@ class Coinche():
                 return
 
             # Move to next player
-            self.active_player_index = (self.active_player_index + 1) % 4
-            await append_line(self.annonce_msg, " - " + self.players[self.active_player_index].mention + " : ?")
+            self.active_player = self.active_player.next
+            await append_line(self.annonce_msg, " - " + self.active_player.mention + " : ?")
             return
 
         # Then it is a normal bet. Try to cast it in an announce
@@ -136,15 +154,15 @@ class Coinche():
 
         self.pass_counter = 0
         self.anounce = anounce
-        self.taker_index = self.active_player_index
+        self.taker = self.active_player
 
         # Print the anounce
         await remove_last_line(self.annonce_msg)
         await append_line(self.annonce_msg, " - " + ctx.author.mention + " : " + str(self.anounce))
 
         # Move to next player
-        self.active_player_index = (self.active_player_index + 1) % 4
-        await append_line(self.annonce_msg, " - " + self.players[self.active_player_index].mention + " : ?")
+        self.active_player = self.active_player.next
+        await append_line(self.annonce_msg, " - " + self.active_player.mention + " : ?")
 
     async def coinche(self, ctx):
         # Check if author is a player
@@ -162,7 +180,7 @@ class Coinche():
                 "Il n'y a pas d'annonce à coincher pour le moment")
 
         # Check if the player is in opposite team from the taker (i.e he can coinche)
-        if (self.taker_index) % 2 == (self.players.index(ctx.author)) % 2:
+        if self.taker.team == self.players[ctx.author].team:
             raise InvalidActorError(
                 "Ton équipe a proposé le dernier contrat. Tu ne peux pas coincher")
 
@@ -188,16 +206,17 @@ class Coinche():
             raise InvalidActorError("Seul un joueur peut annoncer")
 
         self.anounce = Anounce(goal, trump, capot, generale)
-        self.taker_index = self.players.index(ctx.author)
+        self.taker = self.players[ctx.author]
         self.bet_phase = False
 
         await self.setup_play()
 
     async def update_tricks(self):
-        cardsA = self.cards_won[self.players[0]] + \
-            self.cards_won[self.players[2]]
-        cardsB = self.cards_won[self.players[1]] + \
-            self.cards_won[self.players[3]]
+        cardsA = self.players[0].cards_won + \
+            self.players[2].cards_won
+        cardsB = self.players[1].cards_won + \
+            self.players[3].cards_won
+
         tricksA = len(cardsA) // 4
         tricksB = len(cardsB) // 4
 
@@ -219,62 +238,51 @@ class Coinche():
                      "- {} | {}: {} parties").format(
                 self.players[0].mention,
                 self.players[2].mention,
-                self.global_score_A,
+                self.global_score[0],
                 self.players[1].mention,
                 self.players[3].mention,
-                self.global_score_B))
-
-    async def update_player_hand(self, player):
-        txt = "[table {}] Ta main :".format(self.index)
-        for color in Color:
-            txt += "\n {} : ".format(color)
-            txt += "".join([str(card.value) for card in
-                            self.hands[player] if card.color == color])
-
-        await self.hands_msg[player].edit(content=txt)
+                self.global_score[1]))
 
     async def setup_play(self):
-        for p in self.players:
-            self.cards_won[p] = []
+        for p in self.all_players:
+            p.cards_won = []
+            # Sort the hands with the new trumps
+            p.sort_hand(trumps=self.anounce.trumps)
+            await p.update_hand()
 
-        # Sort the hands with the new trump value
-        for player in self.hands:
-            self.hands[player].sort(
-                key=lambda c: c.strength(self.anounce.trumps, None),
-                reverse=True)
-            await self.update_player_hand(player)
-
-        self.leader_index = self.dealer_index
+        self.leader = self.dealer
         # If there is a generale, change the leader and active player
         if self.anounce.generale:
-            self.leader_index = self.taker_index
+            self.leader = self.taker
 
         # The first active player is the leader
-        self.active_player_index = self.leader_index
+        self.active_player = self.leader
 
         # Anounce message
-        await self.channel.send("__**Annonces :**__ " + self.players[self.taker_index].mention + " -> " + str(self.anounce))
+        await self.channel.send("__**Annonces :**__ " +
+                                self.taker.mention +
+                                " -> " + str(self.anounce))
+
         # How to play message
         await self.channel.send("Pour jouer : `!p <Valeur> <Couleur>`")
+
         # Number of tricks taken message
         self.trick_msg = await self.channel.send("__**Plis :**__")
         await self.update_tricks()
+
         # Last trick message
         self.last_trick_msg = await self.channel.send("__**Dernier pli :**__")
+
         # Active trick message
         self.active_trick_msg = await self.channel.send(TRICK_DEFAULT_MSG)
-        first_player = self.players[self.active_player_index]
         await modify_line(self.active_trick_msg, 1,
-                          f" - {first_player.mention} : ?")
+                          f" - {self.active_player.mention} : ?")
 
         # Check for belotte
-        team = self.taker_index % 2
-        hands = [self.hands[p] for p in self.players[0 + team::2]]
+        hands = [p.hand for p in self.all_players if p.team == self.taker.team]
+
         if check_belotte(hands, self.anounce.trumps):
-            if team == 0:
-                self.pointsA += 20
-            if team == 1:
-                self.pointsB += 20
+            self.points[self.taker.team] += 20
 
     async def deal(self):
         if len(self.deck) != 32:
@@ -288,14 +296,10 @@ class Coinche():
         hands = deal_deck(self.deck)
 
         # Send the hands to the players
-        for (player, hand) in zip(self.players, hands):
-            hand.sort(key=lambda c: 8*c.color.value +
-                      c.value.value, reverse=True)
-            self.hands[player] = hand
-            self.hands_msg[player] = await player.send("[table {}]")
-            await self.update_player_hand(player)
+        for (player, hand) in zip(self.all_players, hands):
+            await player.receive_hand(hand)
 
-        self.active_player_index = self.dealer_index
+        self.active_player = self.dealer
         self.active_trick = []
         self.pass_counter = 0
         self.bet_phase = True
@@ -309,35 +313,35 @@ class Coinche():
             raise InvalidActorError("Un spectateur ne peut pas jouer de carte")
 
         # Find the player
-        player = ctx.author
-        player_index = self.players.index(player)
+        player = self.players[ctx.author]
 
         # Check if it is player's turn
-        if player_index != self.active_player_index:
+        if player != self.active_player:
             raise InvalidMomentError("Ce n'est pas ton tour de jouer")
 
+        # Without value or trump, check if only 1 card is playable
         if (value, trump) == (None, None):
             trick_cards = [c for (c, _) in self.active_trick]
-            possible = [c for c in self.hands[player]
+            possible = [c for c in player.hand
                         if valid_card(c, trick_cards, self.anounce.trumps,
-                                      self.hands[player]) == OK]
+                                      player.hand) == OK]
             if len(possible) != 1:
                 raise InvalidActionError(
-                        "La commande `!p` n'est valable que quand il n'y a "
-                        "qu'une seule carte que tu peux jouer.")
+                    "La commande `!p` n'est valable que quand il n'y a "
+                    "qu'une seule carte que tu peux jouer.")
             carte = possible[0]
         else:
             # Parse the cards
             carte = Carte(value, trump)
 
             # Check if player has this card in hand
-            if carte not in self.hands[player]:
+            if carte not in player.hand:
                 raise InvalidCardError("Tu n'as pas cette carte en main")
 
             # Check if player is allowed to play this card
             trick_cards = [c for (c, _) in self.active_trick]
             res = valid_card(carte, trick_cards, self.anounce.trumps,
-                             self.hands[player])
+                             player.hand)
             if res == WRONG_COLOR:
                 raise InvalidCardError("Tu dois jouer à la couleur demandée.")
             elif res == TRUMP:
@@ -346,14 +350,13 @@ class Coinche():
                 raise InvalidCardError("Tu dois monter à l'atout.")
 
         # Remove it from the player's hand
-        self.hands[player].remove(carte)
-        await self.update_player_hand(player)
+        await player.play_card(carte)
 
         # Add it to the stack
         self.active_trick.append((carte, player))
 
-        # Move to next player but only localy, to avoid multiple parallel modification
-        local_active_player_index = (self.active_player_index + 1) % 4
+        # Move to next player
+        self.active_player = self.active_player.next
 
         # Update the message with the curent trick
         cards_played = len(self.active_trick)
@@ -364,19 +367,13 @@ class Coinche():
         if cards_played == 4:
             await self.gather()
         else:
-            # Move to next player in the global value now that
-            # the modifications are done
-            self.active_player_index = local_active_player_index
             # Update the message and notify the next player
-            next_player = self.players[self.active_player_index]
             await modify_line(self.active_trick_msg, cards_played + 1,
-                              f" - {next_player.mention} : ?")
+                              f" - {self.active_player.mention} : ?")
 
     async def gather(self):
         # Find the winner
         winner = who_wins_trick(self.active_trick, self.anounce.trumps)
-        winner_index = self.players.index(winner)
-        await self.channel.send("Pli remporté par " + winner.mention, delete_after=5)
 
         # Move actual trick to last trick message
         text = self.active_trick_msg.content.split("\n")
@@ -386,164 +383,137 @@ class Coinche():
         await self.last_trick_msg.edit(content=text)
 
         # Put the cards in the winner's card stack
-        self.cards_won[winner] += [c for (c, _) in self.active_trick]
+        winner.cards_won += [c for (c, _) in self.active_trick]
         # Empty the trick stack
         self.active_trick = []
 
         # Move to new leader
-        self.leader_index = winner_index
+        self.leader = winner
 
         # Check if players have no more cards
-        if len(self.hands[self.players[0]]) == 0:
+        if len(self.players[0].hand) == 0:
             # Count the 10 bonus points of the last trick
-            if winner_index % 2 == 0:
-                self.pointsA += 10
-            else:
-                self.pointsB += 10
+            self.points[winner.team] += 10
             # Trigger end game
             # Update number of points of each team
             await self.update_tricks()
             await self.end_game()
         else:
             # Reset actual trick
-            leader = self.players[self.leader_index]
             await self.active_trick_msg.edit(content=TRICK_DEFAULT_MSG)
             await modify_line(self.active_trick_msg, 1,
-                              f" - {leader.mention} : ?")
+                              f" - {self.leader.mention} : ?")
 
             # Update number of points of each team
             await self.update_tricks()
-            self.active_player_index = self.leader_index
+            self.active_player = self.leader
 
     async def end_game(self):
-        results = self.anounce.count_points(self.cards_won, self.players)
+
+        points_tricks = [p.count_points(self.anounce.trumps)
+                         for p in self.all_players]
 
         # Print the team points
-        self.pointsA += results[0][0] + results[2][0]
-        self.pointsB += results[1][0] + results[3][0]
-        plisA = results[0][1] + results[2][1]
-        plisB = results[1][1] + results[3][1]
+        self.points[0] += points_tricks[0][0] + points_tricks[2][0]
+        self.points[1] += points_tricks[1][0] + points_tricks[3][0]
+
+        tricks = [0, 0]
+        tricks[0] = points_tricks[0][1] + points_tricks[2][1]
+        tricks[1] = points_tricks[1][1] + points_tricks[3][1]
         txt = "__**Points d'équipe (avec Belote pour l'attaque) :**__\n"
 
         txt += " - Équipe {} | {} : {} points | {} plis\n".format(
             self.players[0].mention,
             self.players[2].mention,
-            self.pointsA,
-            plisA)
+            self.points[0],
+            tricks[0])
 
         txt += " - Équipe {} | {} : {} points | {} plis\n".format(
             self.players[1].mention,
             self.players[3].mention,
-            self.pointsB,
-            plisB)
+            self.points[1],
+            tricks[1])
 
         await self.channel.send(txt)
 
         # Find the winning team
-        winner = self.anounce.who_wins_game(results, self.pointsA,
-                                            self.pointsB, self.taker_index)
+        winner_team = self.anounce.who_wins_game(points_tricks, self.points[0],
+                                                 self.points[1], self.taker)
 
         # Increment points
-        if winner == 0:
-            self.global_score_A += 1
-        else:
-            self.global_score_B += 1
+        self.global_score[winner_team] += 1
 
         # Send results
         await self.channel.send("Victoire de l'équipe {} | {} !".format(
-            self.players[0+winner].mention,
-            self.players[2+winner].mention))
+            self.players[0+winner_team].mention,
+            self.players[2+winner_team].mention))
 
         await self.update_global_score()
 
         # Delete the hand messages
-        for p in self.hands_msg:
-            await delete_message(self.hands_msg[p])
-        self.hands_msg = {}
+        for p in self.all_players:
+            await p.clean_hand()
 
         await self.channel.send("Pour relancer une partie, entrez `!again`")
 
     async def reset(self):
-        # Next dealer
-        self.dealer_index = (self.dealer_index + 1) % 4
+
+        # Gather the cards to a new deck
+        # 1. the cards won
+        self.deck = sum([p.cards_won for p in self.all_players], [])
+        # 2. the cards in hand
+        for p in self.all_players:
+            self.deck += p.hand
+        # 3. the cards in trick
+        self.deck += [c for (c, _) in self.active_trick]
 
         # Delete all common messages
         async for m in self.channel.history():
             await delete_message(m)
 
         # Delete all hands messages
-        for p in self.hands_msg:
-            await delete_message(self.hands_msg[p])
-        self.hands_msg = {}
-
-        # Gather the cards to a new deck
-        # the cards won
-        self.deck = sum([self.cards_won[p] for p in self.cards_won], [])
-        # the cards in hand
-        for h in self.hands:
-            self.deck += self.hands[h]
-
-        # the cards in trick
-        self.deck += [c for (c, _) in self.active_trick]
+        for p in self.all_players:
+            await p.clean_hand()
 
         # Reset all the variables but not the global score
         self.anounce = None
-        self.taker_index = 0
-        self.hands = {}
-        self.hands_msg = {}
+        self.taker = None
 
         self.trick_msg = None
-        self.trick_team_A = 0
-        self.trick_team_B = 0
-
-        self.cards_teamA = []
-        self.cards_teamB = []
+        self.tricks = [0, 0]
 
         self.last_trick_msg = None
 
         self.active_trick_msg = None
         self.active_trick = []
-        self.active_player_index = 0
-        self.leader_index = 0
 
-        self.pointsA = 0
-        self.pointsB = 0
+        # Next dealer
+        self.dealer = self.dealer.next
+        self.active_player = self.dealer
+        self.leader = self.dealer
+
+        self.points = [0, 0]
 
         self.bet_phase = True
 
         await self.start()
 
-    async def swap(self, player, target):
-        if player not in self.players:
+    async def swap(self, giver, receiver):
+        if giver not in self.players:
             raise InvalidActorError(
                 "C'est au joueur de swap. Pas au spectateur")
 
-        if target in self.players:
+        if receiver in self.players:
             raise InvalidActionError(
                 "On échange avec un spectateur. Pas un joueur")
 
         # Change the entry in self.players
-        index = self.players.index(player)
-        self.players[index] = target
-
-        # Change the hands if there is one
-        if player in self.hands:
-            self.hands[target] = self.hands.pop(player)
-
-            # Send the new hand
-            self.hands_msg[target] = await target.send("__**Ta main**__")
-            await self.update_player_hand(target)
-
-            # Delete the old hand
-            await delete_message(self.hands_msg.pop(player))
+        player = self.players[giver]
+        await player.change_owner(receiver)
 
         # Send notification
         await self.channel.send("{} a laissé sa place à {} !".format(
-            player.mention, target.mention), delete_after=5)
-
-        print("Swap terminé. Il y a {} players, {} mains, {} messages, {} cartes"
-              .format(len(self.players), len(self.hands),
-                      len(self.hands_msg), len(self.deck)))
+            giver.mention, receiver.mention), delete_after=5)
 
     async def surrender(self, player):
         if player not in self.players:
@@ -552,16 +522,16 @@ class Coinche():
         await self.channel.send("{} abandonne.".format(player.mention))
 
         # The player that surrenders is now the one on defence
-        self.taker_index = (self.players.index(player) + 1) % 4
+        self.taker = self.players[player].next
 
         # Give the active trick to the new attacker
-        self.cards_won[self.players[self.taker_index]
-                       ] += [c for (c, _) in self.active_trick]
+        self.taker.cards_won += [c for (c, _) in self.active_trick]
         self.active_trick = []
 
         # Give the remaining hands to the new attacker
-        for p in self.players:
-            self.cards_won[self.players[self.taker_index]] += self.hands.pop(p)
+        for p in self.all_players:
+            self.taker.cards_won += p.hands
+            await p.clean_hand()
 
         # Set the goal to zero so that the attack wins
         self.anounce.goal = 0
@@ -575,8 +545,8 @@ class Coinche():
         await self.channel.send("Cloture de la table. Merci d'avoir joué !", delete_after=5)
 
         # Clean the hand messages
-        for p in self.hands_msg:
-            await delete_message(self.hands_msg[p])
+        for p in self.all_players:
+            await p.clean_hand()
 
         # Clean the channels
         await delete_message(self.vocal)
@@ -601,3 +571,15 @@ class Coinche():
         async for m in self.channel.history():
             if m.author != bot:
                 await delete_message(m)
+
+    # def print_cards_distribution(self):
+    #     cards = len(sum([self.hands[h] for h in self.hands], []))
+    #     won = len(sum([self.cards_won[p] for p in self.cards_won], []))
+    #     print("Répartition des cartes :")
+    #     print(f"Dans les mains : {cards}")
+    #     for h in self.hands:
+    #         print("  - {} : {}".format(h, len(self.hands[h])))
+    #     print("Sur la table : {}".format(len(self.active_trick)))
+    #     print(f"Gagnées : {won}")
+    #     for h in self.cards_won:
+    #         print("  - {} : {}".format(h, len(self.cards_won[h])))
