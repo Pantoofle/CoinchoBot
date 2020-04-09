@@ -105,7 +105,6 @@ def valid_card(carte, trick, trumps, player_hand):
             return WRONG_COLOR
         if carte.strength(trumps, color) < highest_trick < highest_player:
             return LOW_TRUMP
-
     else:
         if has_color:
             if carte.color != color:
@@ -122,3 +121,5 @@ def valid_card(carte, trick, trumps, player_hand):
                 return TRUMP
             if carte.strength(trumps, color) < highest_trick < highest_player:
                 return LOW_TRUMP
+    # If all tests passed, it's ok
+    return OK
