@@ -6,7 +6,7 @@ class Player():
     def __init__(self, user, index, table):
         self.user = user
         self.hand = []
-        self.hannd_msg = None
+        self.hand_msg = None
         self.cards_won = []
         self.team = index % 2
         self.index = index
