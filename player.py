@@ -44,8 +44,8 @@ class Player():
         await self.update_hand()
 
     def count_points(self, trumps):
-        points = sum([c.points(trumps) for c in self.hand])
-        tricks = len(self.hand) // 4
+        points = sum([c.points(trumps) for c in self.cards_won])
+        tricks = len(self.cards_won) // 4
         return(points, tricks)
 
     async def clean_hand(self):
