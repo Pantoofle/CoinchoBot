@@ -37,8 +37,8 @@ class Coinche():
 
         # Create the players
         self.players = {}
-        for (index, user) in enumerate(players):
-            p = Player(user, index)
+        for (id, user) in enumerate(players):
+            p = Player(user, id, index)
             self.players[user] = p
             self.players[index] = p
 
