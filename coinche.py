@@ -205,7 +205,7 @@ class Coinche():
         if ctx.author not in self.players:
             raise InvalidActorError("Seul un joueur peut annoncer")
 
-        self.anounce = Anounce(goal, trump, capot, generale)
+        self.anounce = Anounce(goal, trump)
         self.taker = self.players[ctx.author]
         self.bet_phase = False
 
