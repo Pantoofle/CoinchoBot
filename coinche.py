@@ -40,7 +40,7 @@ class Coinche():
         for (id, user) in enumerate(players):
             p = Player(user, id, index)
             self.players[user] = p
-            self.players[index] = p
+            self.players[id] = p
 
         for (i, p) in enumerate(players):
             self.players[p].next = self.players[(i+1) % 4]
