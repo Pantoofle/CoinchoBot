@@ -57,7 +57,7 @@ class Player():
     async def change_owner(self, user):
         self.user = user
         self.mention = user.mention
-
-        await delete_message(self.hand_msg)
-        self.hand_msg = None
+        if self.hand_msg is not None:
+            await delete_message(self.hand_msg)
+            self.hand_msg = None
         await self.update_hand()

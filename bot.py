@@ -21,15 +21,17 @@ INDEX_CHAN = "tables-actives"
 index_to_id = {}
 index_to_id["next"] = 1
 
+
+class InvalidCommandError(Exception):
+    pass
+
+
 CONTROLED_ERRORS = [InvalidCardError,
                     InvalidActionError,
                     InvalidActorError,
                     InvalidMomentError,
-                    InvalidAnounceError]
-
-
-class InvalidCommandError(Exception):
-    pass
+                    InvalidAnounceError,
+                    InvalidCommandError]
 
 
 async def invalidChannelMessage(channel):
