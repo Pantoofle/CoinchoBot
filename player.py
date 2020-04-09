@@ -50,8 +50,9 @@ class Player():
 
     async def clean_hand(self):
         self.hand = []
-        await delete_message(self.hand_msg)
-        self.hand_msg = None
+        if self.hand_msg is not None:
+            await delete_message(self.hand_msg)
+            self.hand_msg = None
 
     async def change_owner(self, user):
         self.user = user

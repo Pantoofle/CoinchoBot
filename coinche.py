@@ -42,10 +42,10 @@ class Coinche():
             self.players[user] = p
             self.players[id] = p
 
-        for (i, p) in enumerate(players):
-            self.players[p].next = self.players[(i+1) % 4]
-
         self.all_players = [self.players[i] for i in range(4)]
+
+        for i, p in enumerate(self.all_players):
+            p.next = self.players[(i+1) % 4]
 
         # Generate the deck
         self.deck = Carte.full_deck()
@@ -530,7 +530,7 @@ class Coinche():
 
         # Give the remaining hands to the new attacker
         for p in self.all_players:
-            self.taker.cards_won += p.hands
+            self.taker.cards_won += p.hand
             await p.clean_hand()
 
         # Set the goal to zero so that the attack wins
