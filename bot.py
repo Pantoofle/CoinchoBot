@@ -2,9 +2,10 @@ import discord
 from discord.ext import commands
 import random
 
-from utils import delete_message, InvalidCardError
+from utils import delete_message
 from coinche import Coinche, InvalidActionError, InvalidActorError, InvalidMomentError
 from anounce import InvalidAnounceError
+from carte import InvalidCardError
 
 
 # Load the bot token
