@@ -47,6 +47,9 @@ class Coinche():
         for i, p in enumerate(self.all_players):
             p.next = self.players[(i+1) % 4]
 
+        # Register the spectators
+        self.spectators = set()
+
         # Generate the deck
         self.deck = Carte.full_deck()
         shuffle(self.deck)
@@ -507,9 +510,16 @@ class Coinche():
             raise InvalidActionError(
                 "On échange avec un spectateur. Pas un joueur")
 
+        if receiver not in self.spectators:
+            # Prevent from swapping with the bot or an admin who is not an
+            # active specator.
+            raise InvalidActionError(f"{receiver} n'est pas spectateurice")
+
         # Change the entry in self.players
         player = self.players[giver]
         await player.change_owner(receiver)
+        self.spectators.remove(receiver)
+        self.spectators.add(giver)
 
         # Send notification
         await self.channel.send("{} a laissé sa place à {} !".format(
@@ -553,6 +563,14 @@ class Coinche():
         await delete_message(self.channel)
 
     async def add_spectator(self, target):
+        if target in self.players:
+            raise InvalidActionError(
+                    f"{target.mention} Tu joues déjà à cette table.")
+        if target in self.spectators:
+            raise InvalidActionError(
+                    f"{target.mention} Tu es déjà spectateurice.")
+        self.spectators.add(target)
+
         # Set permissions
         await self.channel.set_permissions(target, read_messages=True)
         await self.vocal.set_permissions(target, view_channel=True)
@@ -560,6 +578,12 @@ class Coinche():
         await self.channel.send("{} a rejoint en tant que spectateurice !".format(target.mention))
 
     async def remove_spectator(self, target):
+        if target not in self.spectators:
+            raise InvalidActionError(
+                    f"{player.mention} Tu n'es pas spectateurice. Tu ne peux "
+                     "pas quitter la table.")
+        self.spectators.remove(target)
+
         # Set permissions
         await self.channel.set_permissions(target, read_messages=False)
         await self.vocal.set_permissions(target, view_channel=False)

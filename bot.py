@@ -260,7 +260,12 @@ async def spectate(ctx, index: int):
         await ctx.channel.send("Je reconnais pas l'id de la table", delete_after=5)
         return
 
-    await table.add_spectator(ctx.author)
+    try:
+        await table.add_spectator(ctx.author)
+    except Exception as e:
+        handleGenericError(e, ctx.channel)
+
+    await update_tables(ctx.guild)
 
 
 @bot.command()
@@ -275,7 +280,12 @@ async def leave(ctx):
         await invalidChannelMessage(ctx.channel)
         return
 
-    await table.remove_spectator(ctx.author)
+    try:
+        await table.remove_spectator(ctx.author)
+    except Exception as e:
+        handleGenericError(e, ctx.channel)
+
+    await update_tables(ctx.guild)
 
 
 @bot.command()
@@ -312,6 +322,9 @@ async def update_tables(guild):
             table = tables[id]
             txt += "\n - [{}] : ".format(str(index))
             txt += " | ".join([p.mention for p in table.all_players])
+            if table.spectators:
+                txt += "\n   Spectateurices : "
+                txt += " , ".join([s.mention for s in table.spectators])
         except KeyError:
             tables_down.append(index)
 
