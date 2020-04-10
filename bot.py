@@ -198,11 +198,16 @@ async def play(ctx, *args):
         else:
             if len(args) == 0:
                 value, color = None, None
+            elif len(args) == 1:
+                [value] = args
+                color = None
             elif len(args) == 2:
                 value, color = args
             else:
-                raise InvalidCommandError("Utilisation : `!p` ou "
-                                          "`!p <valeur> <couleur>`")
+                raise InvalidCommandError("Utilisation :\n"
+                        "- `!p` pour jouer une carte au hasard\n"
+                        "- `!p <valeur>` pour jouer sans préciser la couleur\n"
+                        "- `!p <valeur> <couleur>`")
 
             async with table.lock:
                 await table.play(ctx, value, color)
