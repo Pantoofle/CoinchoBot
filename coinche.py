@@ -1,4 +1,4 @@
-from random import shuffle
+from random import shuffle, choice
 from asyncio import Lock
 
 from carte import Carte, InvalidCardError
@@ -46,6 +46,9 @@ class Coinche():
 
         for i, p in enumerate(self.all_players):
             p.next = self.players[(i+1) % 4]
+
+        # Register the spectators
+        self.spectators = set()
 
         # Generate the deck
         self.deck = Carte.full_deck()
@@ -319,18 +322,25 @@ class Coinche():
         if player != self.active_player:
             raise InvalidMomentError("Ce n'est pas ton tour de jouer")
 
-        # Without value or trump, check if only 1 card is playable
-        if (value, trump) == (None, None):
+        if trump is None:
+            # The command is `!p` or `!p <value>`.
+            # Get all the possible cards:
             trick_cards = [c for (c, _) in self.active_trick]
             possible = [c for c in player.hand
                         if valid_card(c, trick_cards, self.anounce.trumps,
                                       player.hand) == OK]
-            if len(possible) != 1:
-                raise InvalidActionError(
-                    "La commande `!p` n'est valable que quand il n'y a "
-                    "qu'une seule carte que tu peux jouer.")
-            carte = possible[0]
+
+            if value is not None:
+                # The command is `!p <value>`.
+                # We keep only the cards with the desired value.
+                possible = [c for c in possible if c.value == value]
+                if possible == []:
+                    raise InvalidCardError("Tu n'as pas cette carte en main")
+
+            # If several cards are playable, choose one of them randomly
+            carte = choice(possible)
         else:
+            # The command is `!p <value> <color>`.
             # Parse the cards
             carte = Carte(value, trump)
 
@@ -507,11 +517,18 @@ class Coinche():
             raise InvalidActionError(
                 "On échange avec un spectateur. Pas un joueur")
 
+        if receiver not in self.spectators:
+            # Prevent from swapping with the bot or an admin who is not an
+            # active specator.
+            raise InvalidActionError(f"{receiver} n'est pas spectateurice")
+
         # Change the entry in self.players
         player = self.players[giver]
         await player.change_owner(receiver)
         self.players.pop(giver)
         self.players[receiver] = player
+        self.spectators.remove(receiver)
+        self.spectators.add(giver)
 
         # Send notification
         await self.channel.send("{} a laissé sa place à {} !".format(
@@ -555,6 +572,14 @@ class Coinche():
         await delete_message(self.channel)
 
     async def add_spectator(self, target):
+        if target in self.players:
+            raise InvalidActionError(
+                f"{target.mention} Tu joues déjà à cette table.")
+        if target in self.spectators:
+            raise InvalidActionError(
+                f"{target.mention} Tu es déjà spectateurice.")
+        self.spectators.add(target)
+
         # Set permissions
         await self.channel.set_permissions(target, read_messages=True)
         await self.vocal.set_permissions(target, view_channel=True)
@@ -562,6 +587,12 @@ class Coinche():
         await self.channel.send("{} a rejoint en tant que spectateurice !".format(target.mention))
 
     async def remove_spectator(self, target):
+        if target not in self.spectators:
+            raise InvalidActionError(
+                f"{player.mention} Tu n'es pas spectateurice. Tu ne peux "
+                "pas quitter la table.")
+        self.spectators.remove(target)
+
         # Set permissions
         await self.channel.set_permissions(target, read_messages=False)
         await self.vocal.set_permissions(target, view_channel=False)
