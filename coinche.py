@@ -510,6 +510,8 @@ class Coinche():
         # Change the entry in self.players
         player = self.players[giver]
         await player.change_owner(receiver)
+        self.players.pop(giver)
+        self.players[receiver] = player
 
         # Send notification
         await self.channel.send("{} a laissé sa place à {} !".format(
