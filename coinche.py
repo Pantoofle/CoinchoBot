@@ -334,6 +334,7 @@ class Coinche():
                 # The command is `!p <value>`.
                 # We keep only the cards with the desired value.
                 value = Value.from_str(value)
+
                 possible = [c for c in possible if c.value == value]
                 if possible == []:
                     raise InvalidCardError("Tu n'as pas cette carte en main")
@@ -526,6 +527,8 @@ class Coinche():
         # Change the entry in self.players
         player = self.players[giver]
         await player.change_owner(receiver)
+        self.players.pop(giver)
+        self.players[receiver] = player
         self.spectators.remove(receiver)
         self.spectators.add(giver)
 
@@ -573,10 +576,10 @@ class Coinche():
     async def add_spectator(self, target):
         if target in self.players:
             raise InvalidActionError(
-                    f"{target.mention} Tu joues déjà à cette table.")
+                f"{target.mention} Tu joues déjà à cette table.")
         if target in self.spectators:
             raise InvalidActionError(
-                    f"{target.mention} Tu es déjà spectateurice.")
+                f"{target.mention} Tu es déjà spectateurice.")
         self.spectators.add(target)
 
         # Set permissions
@@ -588,8 +591,8 @@ class Coinche():
     async def remove_spectator(self, target):
         if target not in self.spectators:
             raise InvalidActionError(
-                    f"{player.mention} Tu n'es pas spectateurice. Tu ne peux "
-                     "pas quitter la table.")
+                f"{player.mention} Tu n'es pas spectateurice. Tu ne peux "
+                "pas quitter la table.")
         self.spectators.remove(target)
 
         # Set permissions
