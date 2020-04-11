@@ -36,6 +36,10 @@ class Value(IntEnum):
     Huit = 2
     Sept = 1
 
+    @staticmethod
+    def from_str(s):
+        return VALUE_DICT[s.capitalize()]
+
     def __str__(self):
         return VALUE_EMOJI[self]
 

@@ -1,7 +1,7 @@
 from random import shuffle, choice
 from asyncio import Lock
 
-from carte import Carte, InvalidCardError
+from carte import Carte, InvalidCardError, Value
 from utils import append_line, remove_last_line, modify_line, check_belotte, \
     who_wins_trick, valid_card, OK, WRONG_COLOR, TRUMP, LOW_TRUMP
 from utils import delete_message, shuffle_deck, deal_deck
@@ -333,6 +333,8 @@ class Coinche():
             if value is not None:
                 # The command is `!p <value>`.
                 # We keep only the cards with the desired value.
+                value = Value.from_str(value)
+
                 possible = [c for c in possible if c.value == value]
                 if possible == []:
                     raise InvalidCardError("Tu n'as pas cette carte en main")
