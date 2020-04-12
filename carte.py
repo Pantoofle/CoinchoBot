@@ -38,7 +38,11 @@ class Value(IntEnum):
 
     @staticmethod
     def from_str(s):
-        return VALUE_DICT[s.capitalize()]
+        try:
+            return VALUE_DICT[s.capitalize()]
+        except KeyError:
+            raise InvalidCardError(
+                "J'ai pas compris la valeur de ta carte")
 
     def __str__(self):
         return VALUE_EMOJI[self]
