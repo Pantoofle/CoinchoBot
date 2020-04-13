@@ -205,9 +205,9 @@ async def play(ctx, *args):
                 value, color = args
             else:
                 raise InvalidCommandError("Utilisation :\n"
-                        "- `!p` pour jouer une carte au hasard\n"
-                        "- `!p <valeur>` pour jouer sans préciser la couleur\n"
-                        "- `!p <valeur> <couleur>`")
+                                          "- `!p` pour jouer une carte au hasard\n"
+                                          "- `!p <valeur>` pour jouer sans préciser la couleur\n"
+                                          "- `!p <valeur> <couleur>`")
 
             async with table.lock:
                 await table.play(ctx, value, color)
@@ -268,7 +268,7 @@ async def spectate(ctx, index: int):
     try:
         await table.add_spectator(ctx.author)
     except Exception as e:
-        handleGenericError(e, ctx.channel)
+        await handleGenericError(e, ctx.channel)
 
     await update_tables(ctx.guild)
 
@@ -288,7 +288,7 @@ async def leave(ctx):
     try:
         await table.remove_spectator(ctx.author)
     except Exception as e:
-        handleGenericError(e, ctx.channel)
+        await handleGenericError(e, ctx.channel)
 
     await update_tables(ctx.guild)
 
@@ -346,7 +346,7 @@ async def update_tables(guild):
         await tables_msg.edit(content=txt)
 
 
-@bot.command()
+@bot.command(aliases=["clear"])
 async def clean(ctx):
     global tables
     global bot
