@@ -4,7 +4,7 @@ import random
 
 from utils import delete_message
 from coinche import BET_PHASE, Coinche, \
-        InvalidActionError, InvalidActorError, InvalidMomentError
+    InvalidActionError, InvalidActorError, InvalidMomentError
 from anounce import InvalidAnounceError
 from carte import InvalidCardError
 
@@ -380,6 +380,25 @@ async def surrender(ctx):
     try:
         async with table.lock:
             await table.surrender(ctx.author)
+    except Exception as e:
+        await handleGenericError(e, ctx.channel)
+
+
+@bot.command()
+async def hand(ctx):
+    global tables
+    await delete_message(ctx.message)
+
+    # Find the table
+    try:
+        table = tables[ctx.channel.id]
+    except KeyError:
+        await invalidChannelMessage(ctx.channel)
+        return
+
+    try:
+        async with table.lock:
+            await table.print_initial_hand(ctx.author)
     except Exception as e:
         await handleGenericError(e, ctx.channel)
 

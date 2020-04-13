@@ -5,6 +5,7 @@ from utils import delete_message
 class Player():
     def __init__(self, user, index, table):
         self.user = user
+        self.initial_hand = []
         self.hand = []
         self.hand_msg = None
         self.cards_won = []
@@ -33,9 +34,13 @@ class Player():
         self.hand.sort(
             key=lambda c: c.strength(trumps, None),
             reverse=True)
+        self.initial_hand.sort(
+            key=lambda c: c.strength(trumps, None),
+            reverse=True)
 
     async def receive_hand(self, hand):
         self.hand = hand
+        self.initial_hand = hand.copy()
         self.sort_hand()
         await self.update_hand()
 
@@ -61,3 +66,11 @@ class Player():
             await delete_message(self.hand_msg)
             self.hand_msg = None
         await self.update_hand()
+
+    async def print_initial_hand(self, channel):
+        txt = "La main de {} :".format(self.mention)
+        for color in Color:
+            txt += "\n {} : ".format(color)
+            txt += "".join([str(card.value) for card in
+                            self.initial_hand if card.color == color])
+        await channel.send(txt)

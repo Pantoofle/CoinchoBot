@@ -316,7 +316,7 @@ class Coinche():
         # Check if we are in play phase
         if self.phase != PLAY_PHASE:
             raise InvalidMomentError(
-                    "Impossible de jouer hors de la phase de jeu.")
+                "Impossible de jouer hors de la phase de jeu.")
 
         if ctx.author not in self.players:
             raise InvalidActorError("Un spectateur ne peut pas jouer de carte")
@@ -475,11 +475,10 @@ class Coinche():
         await self.channel.send("Pour relancer une partie, entrez `!again`")
         self.phase = AFTER_GAME
 
-
     async def reset(self):
         if self.phase != AFTER_GAME:
             raise InvalidActionError(
-                    "Cette action n'est possible qu'en fin de partie.")
+                "Cette action n'est possible qu'en fin de partie.")
 
         # Gather the cards to a new deck
         # 1. the cards won
@@ -548,7 +547,7 @@ class Coinche():
     async def surrender(self, player):
         if self.phase != PLAY_PHASE:
             raise InvalidMomentError(
-                    "Impossible d'abandonner hors de la phase de jeu.")
+                "Impossible d'abandonner hors de la phase de jeu.")
 
         if player not in self.players:
             raise InvalidActorError("Seul un joueur peut abandonner")
@@ -604,7 +603,7 @@ class Coinche():
     async def remove_spectator(self, target):
         if target not in self.spectators:
             raise InvalidActionError(
-                f"{player.mention} Tu n'es pas spectateurice. Tu ne peux "
+                f"{target.mention} Tu n'es pas spectateurice. Tu ne peux "
                 "pas quitter la table.")
         self.spectators.remove(target)
 
@@ -620,14 +619,9 @@ class Coinche():
             if m.author != bot:
                 await delete_message(m)
 
-    # def print_cards_distribution(self):
-    #     cards = len(sum([self.hands[h] for h in self.hands], []))
-    #     won = len(sum([self.cards_won[p] for p in self.cards_won], []))
-    #     print("Répartition des cartes :")
-    #     print(f"Dans les mains : {cards}")
-    #     for h in self.hands:
-    #         print("  - {} : {}".format(h, len(self.hands[h])))
-    #     print("Sur la table : {}".format(len(self.active_trick)))
-    #     print(f"Gagnées : {won}")
-    #     for h in self.cards_won:
-    #         print("  - {} : {}".format(h, len(self.cards_won[h])))
+    async def print_initial_hand(self, user):
+        if user not in self.players:
+            raise InvalidActorError(
+                f"{user.mention} Tu es spectateurice. Tu n'as pas de main à montrer")
+
+        await self.players[user].print_initial_hand(self.channel)
