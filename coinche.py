@@ -1,7 +1,7 @@
 from random import shuffle, choice
 from asyncio import Lock
 
-from carte import Carte, InvalidCardError
+from carte import Carte, InvalidCardError, Value
 from utils import append_line, remove_last_line, modify_line, check_belotte, \
     who_wins_trick, valid_card, OK, WRONG_COLOR, TRUMP, LOW_TRUMP
 from utils import delete_message, shuffle_deck, deal_deck
@@ -26,6 +26,12 @@ TRICK_DEFAULT_MSG = """__**Pli actuel :**__
  - ...
  - ...
  - ..."""
+
+
+# The different phases of the game:
+BET_PHASE = 0
+PLAY_PHASE = 1
+AFTER_GAME = 2
 
 
 class Coinche():
@@ -56,7 +62,7 @@ class Coinche():
 
         # Variables for announces
         self.anounce = None
-        self.bet_phase = True
+        self.phase = BET_PHASE
         self.pass_counter = 0
         self.annonce_msg = None
 
@@ -103,8 +109,8 @@ class Coinche():
             self.dealer.mention + " : ?")
 
         self.active_player = self.dealer
-        self.bet_phase = True
         await self.deal()
+        self.phase = BET_PHASE
 
     async def bet(self, ctx, goal: int, trump):
         # Check if author is a player
@@ -113,7 +119,7 @@ class Coinche():
                 "Les spectateurs ne sont pas autorisés à annoncer.")
 
         # Check if we are in Bet Phase
-        if not self.bet_phase:
+        if self.phase != BET_PHASE:
             raise InvalidMomentError(
                 "Tu ne peux pas faire ça hors de la phase d'annonce " +
                 ctx.author.mention)
@@ -131,12 +137,13 @@ class Coinche():
             # Check if all players passed without anyone anouncing
             if self.pass_counter == 4 and self.anounce is None:
                 await self.channel.send("Personne ne prend ? On va redistribuer alors...")
+                # We declare the game finished in order to reset it
+                self.phase = AFTER_GAME
                 await self.reset()
                 return
 
             # Check if all players passed with someone anouncing
             if self.pass_counter == 3 and self.anounce is not None:
-                self.bet_phase = False
                 await append_line(self.annonce_msg, "Fin des annonces")
                 # Start the play phase
                 await self.setup_play()
@@ -174,7 +181,7 @@ class Coinche():
                 "Les spectateurs ne sont pas autorisés à coincher")
 
         # Check if we are in Bet Phase
-        if not self.bet_phase:
+        if self.phase != BET_PHASE:
             raise InvalidMomentError("La phase d'annonces est terminée")
 
         # Check if there's something to coinche
@@ -194,15 +201,13 @@ class Coinche():
         await remove_last_line(self.annonce_msg)
         await append_line(self.annonce_msg, " - " + ctx.author.mention + " : Coinchée")
 
-        self.bet_phase = False
-
         await append_line(self.annonce_msg, "Fin des annonces")
 
         # Start the play phase
         await self.setup_play()
 
     async def annonce(self, ctx, goal: int, trump, capot=False, generale=False):
-        if self.bet_phase is False:
+        if self.phase != BET_PHASE:
             raise InvalidMomentError("Les annonces sont déjà faites")
 
         if ctx.author not in self.players:
@@ -210,7 +215,6 @@ class Coinche():
 
         self.anounce = Anounce(goal, trump)
         self.taker = self.players[ctx.author]
-        self.bet_phase = False
 
         await self.setup_play()
 
@@ -287,6 +291,8 @@ class Coinche():
         if check_belotte(hands, self.anounce.trumps):
             self.points[self.taker.team] += 20
 
+        self.phase = PLAY_PHASE
+
     async def deal(self):
         if len(self.deck) != 32:
             raise InvalidCardError(
@@ -305,12 +311,12 @@ class Coinche():
         self.active_player = self.dealer
         self.active_trick = []
         self.pass_counter = 0
-        self.bet_phase = True
 
     async def play(self, ctx, value, trump):
         # Check if we are in play phase
-        if self.bet_phase is True:
-            raise InvalidMomentError("Impossible en phase d'annonce")
+        if self.phase != PLAY_PHASE:
+            raise InvalidMomentError(
+                    "Impossible de jouer hors de la phase de jeu.")
 
         if ctx.author not in self.players:
             raise InvalidActorError("Un spectateur ne peut pas jouer de carte")
@@ -333,6 +339,8 @@ class Coinche():
             if value is not None:
                 # The command is `!p <value>`.
                 # We keep only the cards with the desired value.
+                value = Value.from_str(value)
+
                 possible = [c for c in possible if c.value == value]
                 if possible == []:
                     raise InvalidCardError("Tu n'as pas cette carte en main")
@@ -465,8 +473,13 @@ class Coinche():
             await p.clean_hand()
 
         await self.channel.send("Pour relancer une partie, entrez `!again`")
+        self.phase = AFTER_GAME
+
 
     async def reset(self):
+        if self.phase != AFTER_GAME:
+            raise InvalidActionError(
+                    "Cette action n'est possible qu'en fin de partie.")
 
         # Gather the cards to a new deck
         # 1. the cards won
@@ -504,8 +517,6 @@ class Coinche():
 
         self.points = [0, 0]
 
-        self.bet_phase = True
-
         await self.start()
 
     async def swap(self, giver, receiver):
@@ -535,6 +546,10 @@ class Coinche():
             giver.mention, receiver.mention), delete_after=5)
 
     async def surrender(self, player):
+        if self.phase != PLAY_PHASE:
+            raise InvalidMomentError(
+                    "Impossible d'abandonner hors de la phase de jeu.")
+
         if player not in self.players:
             raise InvalidActorError("Seul un joueur peut abandonner")
 

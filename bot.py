@@ -3,7 +3,8 @@ from discord.ext import commands
 import random
 
 from utils import delete_message
-from coinche import Coinche, InvalidActionError, InvalidActorError, InvalidMomentError
+from coinche import BET_PHASE, Coinche, \
+        InvalidActionError, InvalidActorError, InvalidMomentError
 from anounce import InvalidAnounceError
 from carte import InvalidCardError
 
@@ -187,7 +188,7 @@ async def play(ctx, *args):
 
     try:
         # If we are in bet phase, consider !p as a bet
-        if table.bet_phase:
+        if table.phase == BET_PHASE:
             try:
                 value, color = args
             except ValueError:

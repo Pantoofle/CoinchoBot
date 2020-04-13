@@ -36,6 +36,14 @@ class Value(IntEnum):
     Huit = 2
     Sept = 1
 
+    @staticmethod
+    def from_str(s):
+        try:
+            return VALUE_DICT[s.capitalize()]
+        except KeyError:
+            raise InvalidCardError(
+                "J'ai pas compris la valeur de ta carte")
+
     def __str__(self):
         return VALUE_EMOJI[self]
 
