@@ -129,6 +129,11 @@ class Coinche():
             raise InvalidActorError(
                 "C'est pas à toi d'annoncer " + ctx.author.mention)
 
+        # Check if goal in reasonable bounds
+        if goal > 185:
+            raise InvalidActionError(
+                "{goal} c'est beaucoup pour une annonce...")
+
         # If goal is 0, the player passed
         if goal == 0:
             await remove_last_line(self.annonce_msg)
