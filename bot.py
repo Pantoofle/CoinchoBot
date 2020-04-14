@@ -50,7 +50,6 @@ async def handleGenericError(e, channel):
 async def start(ctx, p2: discord.Member, p3: discord.Member, p4: discord.Member):
     global tables
     players = [ctx.author, p2, p3, p4]
-    await ctx.send("Starting a game with " + ", ".join([p.mention for p in players]), delete_after=10)
 
     guild = ctx.guild
     base = {
