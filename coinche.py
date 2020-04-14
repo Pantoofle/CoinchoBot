@@ -160,7 +160,7 @@ class Coinche():
         # Check if goal in reasonable bounds
         if anounce.goal > 185:
             raise InvalidActionError(
-                "{anounce.goal} c'est beaucoup pour une annonce...")
+                f"{anounce.goal} c'est beaucoup pour une annonce...")
 
         # If the player did not bet enough
         if anounce <= self.anounce:
