@@ -624,4 +624,8 @@ class Coinche():
             raise InvalidActorError(
                 f"{user.mention} Tu es spectateurice. Tu n'as pas de main à montrer")
 
+        if self.phase == BET_PHASE:
+            raise InvalidMomentError(
+                f"{user.mention} Impossible de montrer sa main pendant la phase d'annonce")
+
         await self.players[user].print_initial_hand(self.channel)
