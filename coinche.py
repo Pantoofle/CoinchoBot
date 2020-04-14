@@ -129,11 +129,6 @@ class Coinche():
             raise InvalidActorError(
                 "C'est pas à toi d'annoncer " + ctx.author.mention)
 
-        # Check if goal in reasonable bounds
-        if goal > 185:
-            raise InvalidActionError(
-                "{goal} c'est beaucoup pour une annonce...")
-
         # If goal is 0, the player passed
         if goal == 0:
             await remove_last_line(self.annonce_msg)
@@ -161,6 +156,11 @@ class Coinche():
 
         # Then it is a normal bet. Try to cast it in an announce
         anounce = Anounce(goal, trump)
+
+        # Check if goal in reasonable bounds
+        if anounce.goal > 185:
+            raise InvalidActionError(
+                "{anounce.goal} c'est beaucoup pour une annonce...")
 
         # If the player did not bet enough
         if anounce <= self.anounce:
