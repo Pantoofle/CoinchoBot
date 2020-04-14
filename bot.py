@@ -236,6 +236,25 @@ async def again(ctx):
 
 
 @bot.command()
+async def replay(ctx):
+    global tables
+    await delete_message(ctx.message)
+
+    # Find the table
+    try:
+        table = tables[ctx.channel.id]
+    except KeyError:
+        await invalidChannelMessage(ctx.channel)
+        return
+
+    try:
+        async with table.lock:
+            await table.reset(replay=True)
+    except Exception as e:
+        await handleGenericError(e, ctx.channel)
+
+
+@bot.command()
 async def end(ctx):
     global tables
     # Find the table

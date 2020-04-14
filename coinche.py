@@ -89,7 +89,7 @@ class Coinche():
         self.dealer = p0
         self.taker = p0
 
-    async def start(self):
+    async def start(self, replay=False):
         await self.channel.send("Début de partie ! {} | {} VS {} | {}".format(
             self.players[0].mention,
             self.players[2].mention,
@@ -109,7 +109,7 @@ class Coinche():
             self.dealer.mention + " : ?")
 
         self.active_player = self.dealer
-        await self.deal()
+        await self.deal(replay=replay)
         self.phase = BET_PHASE
 
     async def bet(self, ctx, goal: int, trump):
@@ -298,13 +298,14 @@ class Coinche():
 
         self.phase = PLAY_PHASE
 
-    async def deal(self):
+    async def deal(self, replay=False):
         if len(self.deck) != 32:
             raise InvalidCardError(
                 "Pourquoi mon deck a pas 32 cartes ? Ya un souci !")
 
-        # Shuffle the deck
-        self.deck = shuffle_deck(self.deck)
+        if not replay:
+            # Shuffle the deck
+            self.deck = shuffle_deck(self.deck)
 
         # Deal the cards
         hands = deal_deck(self.deck)
@@ -480,19 +481,20 @@ class Coinche():
         await self.channel.send("Pour relancer une partie, entrez `!again`")
         self.phase = AFTER_GAME
 
-    async def reset(self):
+    async def reset(self, replay=False):
         if self.phase != AFTER_GAME:
             raise InvalidActionError(
                 "Cette action n'est possible qu'en fin de partie.")
 
-        # Gather the cards to a new deck
-        # 1. the cards won
-        self.deck = sum([p.cards_won for p in self.all_players], [])
-        # 2. the cards in hand
-        for p in self.all_players:
-            self.deck += p.hand
-        # 3. the cards in trick
-        self.deck += [c for (c, _) in self.active_trick]
+        if not replay:
+            # Gather the cards to a new deck
+            # 1. the cards won
+            self.deck = sum([p.cards_won for p in self.all_players], [])
+            # 2. the cards in hand
+            for p in self.all_players:
+                self.deck += p.hand
+            # 3. the cards in trick
+            self.deck += [c for (c, _) in self.active_trick]
 
         # Delete all common messages
         async for m in self.channel.history():
@@ -514,14 +516,16 @@ class Coinche():
         self.active_trick_msg = None
         self.active_trick = []
 
-        # Next dealer
-        self.dealer = self.dealer.next
+        if not replay:
+            # Next dealer
+            self.dealer = self.dealer.next
+
         self.active_player = self.dealer
         self.leader = self.dealer
 
         self.points = [0, 0]
 
-        await self.start()
+        await self.start(replay=replay)
 
     async def swap(self, giver, receiver):
         if giver not in self.players:
