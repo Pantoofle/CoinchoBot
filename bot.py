@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import random
+import os
 
 from utils import delete_message
 from coinche import BET_PHASE, Coinche, \
@@ -10,8 +11,9 @@ from carte import InvalidCardError
 
 
 # Load the bot token
+path = os.path.dirname(os.path.abspath(__file__))
 TOKEN = ""
-with open(".token", "r") as f:
+with open(path+"/.token", "r") as f:
     TOKEN = f.readline()
 
 bot = commands.Bot(command_prefix="!")
