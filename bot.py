@@ -472,7 +472,7 @@ async def dispo(ctx, time="1h"):
     avail_timers[ctx.author] = timer
 
 
-@bot.command(name="puDispo")
+@bot.command(name="pudispo")
 async def not_dispo(ctx):
     global avail_timers
     await delete_message(ctx.message)
