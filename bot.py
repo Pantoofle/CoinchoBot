@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands
 import random
 import os
+import asyncio
+from dateutil import parser
 
 from utils import delete_message
 from coinche import BET_PHASE, Coinche, \
@@ -23,6 +25,7 @@ tables_msg = None
 INDEX_CHAN = "tables-actives"
 index_to_id = {}
 index_to_id["next"] = 1
+avail_timers = {}
 
 
 class InvalidCommandError(Exception):
@@ -439,6 +442,46 @@ async def hand(ctx):
             await table.print_initial_hand(ctx.author)
     except Exception as e:
         await handleGenericError(e, ctx.channel)
+
+
+@bot.command()
+async def dispo(ctx, time="1h"):
+    global avail_timers
+    await delete_message(ctx.message)
+
+    # Parse the time
+    try:
+        parsed = parser.parse(time)
+        h = parsed.hour
+        m = parsed.minute
+        s = parsed.second
+        s += 3600*h + 60*m
+    except Exception:
+        await handleGenericError(InvalidActionError("Je n'ai pas compris la durée. Utilise `<heures>h<minutes>`."))
+        return
+
+    # Adding the role
+    role = discord.utils.find(lambda r: r.name == "Dispo", ctx.guild.roles)
+    await ctx.author.add_roles(role)
+
+    # Delay the role deletion
+    loop = asyncio.get_event_loop()
+    timer = loop.call_later(s, lambda: asyncio.ensure_future(
+        ctx.author.remove_roles(role)))
+    # Remember the timer, to delete it if needed
+    avail_timers[ctx.author] = timer
+
+
+@bot.command(name="puDispo")
+async def not_dispo(ctx):
+    global avail_timers
+    await delete_message(ctx.message)
+
+    if ctx.author in avail_timers:
+        avail_timers[ctx.author].cancel()
+
+    role = discord.utils.find(lambda r: r.name == "Dispo", ctx.guild.roles)
+    await ctx.author.remove_roles(role)
 
 
 @bot.command()
