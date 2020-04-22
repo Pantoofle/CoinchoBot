@@ -3,10 +3,11 @@ from utils import delete_message
 
 
 class Player():
-    def __init__(self, user, index, table):
+    def __init__(self, user, index, table, hand_channel):
         self.user = user
         self.initial_hand = []
         self.hand = []
+        self.hand_channel = hand_channel
         self.hand_msg = None
         self.cards_won = []
         self.team = index % 2
@@ -28,7 +29,7 @@ class Player():
         if self.hand_msg is not None:
             await self.hand_msg.edit(content=txt)
         else:
-            self.hand_msg = await self.user.send(txt)
+            self.hand_msg = await self.hand_channel.send(txt)
 
     def sort_hand(self, trumps=[]):
         self.hand.sort(

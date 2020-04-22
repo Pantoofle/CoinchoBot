@@ -53,12 +53,13 @@ async def start(ctx, p2: discord.Member, p3: discord.Member, p4: discord.Member)
     global tables
     players = [ctx.author, p2, p3, p4]
 
+    # Prepare the permission modifications
     guild = ctx.guild
     base = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False)
     }
 
-    overwrites = {
+    overwrites_all = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
         guild.me: discord.PermissionOverwrite(read_messages=True),
         players[0]: discord.PermissionOverwrite(read_messages=True),
@@ -67,22 +68,38 @@ async def start(ctx, p2: discord.Member, p3: discord.Member, p4: discord.Member)
         players[3]: discord.PermissionOverwrite(read_messages=True)
     }
 
-    category = discord.utils.find(
-        lambda cat: cat.name == "Tables de Coinche", ctx.guild.categories)
-    if not category:
-        category = await ctx.guild.create_category("Tables de Coinche", overwrites=base)
+    # Create the category where we put the table
+    index = index_to_id["next"]
+    category = await ctx.guild.create_category(f"Table {index}", overwrites=base)
 
+    # Create the table
     channel = await ctx.guild.create_text_channel(
-        name="table-coinche",
+        name="Zone de Jeu",
         category=category,
-        overwrites=overwrites
+        overwrites=overwrites_all
     )
 
+    # Create the vocal channel
     vocal_channel = await ctx.guild.create_voice_channel(
-        name="table-coinche",
+        name="Vocal",
         category=category,
-        overwrites=overwrites
+        overwrites=overwrites_all
     )
+
+    # Create the hands channels
+    hand_channels = {}
+    for p in players:
+        overwrites_perso = {
+            guild.default_role: discord.PermissionOverwrite(
+                read_messages=False),
+            p: discord.PermissionOverwrite(read_messages=True)
+        }
+
+        hand_channels[p] = await ctx.guild.create_text_channel(
+            name=f"Main de {p.name}",
+            category=category,
+            overwrites=overwrites_perso
+        )
 
     await delete_message(ctx.message)
     # Register the table in the index list
@@ -90,7 +107,8 @@ async def start(ctx, p2: discord.Member, p3: discord.Member, p4: discord.Member)
     index_to_id[index] = channel.id
     index_to_id["next"] += 1
     # Create the table
-    tables[channel.id] = Coinche(channel, vocal_channel, players, index)
+    tables[channel.id] = Coinche(
+        channel, vocal_channel, hand_channels, players, index)
 
     await update_tables(ctx.guild)
     await tables[channel.id].start()

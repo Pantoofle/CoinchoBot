@@ -35,16 +35,17 @@ AFTER_GAME = 2
 
 
 class Coinche():
-    def __init__(self, channel, vocal_channel, players, index):
+    def __init__(self, channel, vocal_channel, hand_channels, players, index):
         self.lock = Lock()
         self.index = index
         self.channel = channel
         self.vocal = vocal_channel
+        self.hand_channels = hand_channels
 
         # Create the players
         self.players = {}
         for (id, user) in enumerate(players):
-            p = Player(user, id, index)
+            p = Player(user, id, index, hand_channels[user])
             self.players[user] = p
             self.players[id] = p
 
@@ -586,13 +587,12 @@ class Coinche():
     async def end_table(self):
         await self.channel.send("Cloture de la table. Merci d'avoir joué !", delete_after=5)
 
-        # Clean the hand messages
-        for p in self.all_players:
-            await p.clean_hand()
-
         # Clean the channels
-        await delete_message(self.vocal)
-        await delete_message(self.channel)
+        for c in self.channel.category.channels:
+            await delete_message(c)
+
+        # Delete the category
+        await delete_message(self.channel.category)
 
     async def add_spectator(self, target):
         if target in self.players:
