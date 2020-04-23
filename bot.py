@@ -54,6 +54,7 @@ async def handleGenericError(e, channel):
 @bot.command()
 async def start(ctx, p2: discord.Member, p3: discord.Member, p4: discord.Member):
     global tables
+    await delete_message(ctx.message)
     players = [ctx.author, p2, p3, p4]
 
     # Prepare the permission modifications
@@ -104,7 +105,6 @@ async def start(ctx, p2: discord.Member, p3: discord.Member, p4: discord.Member)
             overwrites=overwrites_perso
         )
 
-    await delete_message(ctx.message)
     # Register the table in the index list
     index = index_to_id["next"]
     index_to_id[index] = channel.id
@@ -112,6 +112,10 @@ async def start(ctx, p2: discord.Member, p3: discord.Member, p4: discord.Member)
     # Create the table
     tables[channel.id] = Coinche(
         channel, vocal_channel, hand_channels, players, index)
+
+    # Set all players to not dispo anymore
+    for p in players:
+        await is_not_dispo(ctx.author, ctx.guild)
 
     await update_tables(ctx.guild)
     await tables[channel.id].start()
@@ -446,7 +450,6 @@ async def hand(ctx):
 
 @bot.command()
 async def dispo(ctx, time="1h"):
-    global avail_timers
     await delete_message(ctx.message)
 
     # Parse the time
@@ -460,28 +463,36 @@ async def dispo(ctx, time="1h"):
         await handleGenericError(InvalidActionError("Je n'ai pas compris la durée. Utilise `<heures>h<minutes>`."))
         return
 
-    # Adding the role
-    role = discord.utils.find(lambda r: r.name == "Dispo", ctx.guild.roles)
-    await ctx.author.add_roles(role)
-
-    # Delay the role deletion
-    loop = asyncio.get_event_loop()
-    timer = loop.call_later(s, lambda: asyncio.ensure_future(
-        ctx.author.remove_roles(role)))
-    # Remember the timer, to delete it if needed
-    avail_timers[ctx.author] = timer
+    await is_dispo(ctx.author, ctx.guild, s)
 
 
 @bot.command(name="pudispo")
 async def not_dispo(ctx):
-    global avail_timers
     await delete_message(ctx.message)
+    await is_not_dispo(ctx.author, ctx.guild)
 
-    if ctx.author in avail_timers:
-        avail_timers[ctx.author].cancel()
 
-    role = discord.utils.find(lambda r: r.name == "Dispo", ctx.guild.roles)
-    await ctx.author.remove_roles(role)
+async def is_dispo(user, guild, time):
+    global avail_timers
+    # Adding the role
+    role = discord.utils.find(lambda r: r.name == "Dispo", guild.roles)
+    await user.add_roles(role)
+
+    # Delay the role deletion
+    loop = asyncio.get_event_loop()
+    timer = loop.call_later(time, lambda: asyncio.ensure_future(
+        user.remove_roles(role)))
+
+    # Remember the timer, to delete it if needed
+    avail_timers[user] = timer
+
+
+async def is_not_dispo(user, guild):
+    if user in avail_timers:
+        avail_timers[user].cancel()
+
+    role = discord.utils.find(lambda r: r.name == "Dispo", guild.roles)
+    await user.remove_roles(role)
 
 
 @bot.command()
