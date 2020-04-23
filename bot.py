@@ -115,7 +115,7 @@ async def start(ctx, p2: discord.Member, p3: discord.Member, p4: discord.Member)
 
     # Set all players to not dispo anymore
     for p in players:
-        await is_not_dispo(ctx.author, ctx.guild)
+        await is_not_dispo(p, ctx.guild)
 
     await update_tables(ctx.guild)
     await tables[channel.id].start()
