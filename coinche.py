@@ -550,6 +550,10 @@ class Coinche():
         self.spectators.remove(receiver)
         self.spectators.add(giver)
 
+        # Give the permission to read the hand chan
+        await player.hand_channel.set_permissions(receiver, read_messages=True)
+        await player.hand_channel.set_permissions(giver, read_messages=False)
+
         # Send notification
         await self.channel.send("{} a laissé sa place à {} !".format(
             giver.mention, receiver.mention), delete_after=5)
