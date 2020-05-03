@@ -109,6 +109,10 @@ class Coinche():
             "__**Phase d'annonce :**__\n - " +
             self.dealer.mention + " : ?")
 
+        # Reset players
+        for p in self.all_players:
+            p.cards_won = []
+
         self.active_player = self.dealer
         await self.deal(replay=replay)
         self.phase = BET_PHASE
