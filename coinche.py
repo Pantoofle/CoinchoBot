@@ -141,10 +141,10 @@ class Coinche():
             self.pass_counter += 1
             # Check if all players passed without anyone anouncing
             if self.pass_counter == 4 and self.anounce is None:
-                await self.channel.send("Personne ne prend ? On va redistribuer alors...")
+                await self.channel.send("Personne ne prend ?")
                 # We declare the game finished in order to reset it
+                await self.channel.send("Pour relancer une partie, entrez `!again`")
                 self.phase = AFTER_GAME
-                await self.reset()
                 return
 
             # Check if all players passed with someone anouncing
