@@ -614,6 +614,8 @@ class Coinche():
         # Set permissions
         await self.channel.set_permissions(target, read_messages=True)
         await self.vocal.set_permissions(target, view_channel=True)
+        for p in self.players:
+            await p.hand_channel.set_permissions(target, read_messages=True)
         # Notify users
         await self.channel.send("{} a rejoint en tant que spectateurice !".format(target.mention))
 
