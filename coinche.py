@@ -551,8 +551,12 @@ class Coinche():
         await player.change_owner(receiver)
         self.players.pop(giver)
         self.players[receiver] = player
-        self.spectators.remove(receiver)
-        self.spectators.add(giver)
+
+        # Set the permissions
+        self.remove_spectator(receiver)
+        self.set_player_permissions(receiver)
+
+        self.add_spectator(giver)
 
         # Give the permission to read the hand chan
         await player.hand_channel.set_permissions(receiver, read_messages=True)
@@ -602,6 +606,29 @@ class Coinche():
         # Delete the category
         await delete_message(self.channel.category)
 
+    async def set_spectator_permission(self, target):
+        # Give access to the text and vocal channel
+        await self.channel.set_permissions(target, read_messages=True)
+        await self.vocal.set_permissions(target, view_channel=True)
+        # Give access to the hands
+        for p in self.all_players:
+            await p.hand_channel.set_permissions(target, read_messages=True)
+
+    async def set_player_permissions(self, target):
+        # Give access to the text and vocal channel
+        await self.channel.set_permissions(target, read_messages=True)
+        await self.vocal.set_permissions(target, view_channel=True)
+        # Give access to the player's hand
+        await self.players[target].hand_channel.set_permissions(target, read_messages=True)
+
+    async def reset_permissions(self, target):
+        # Remove access to the text and vocal channel
+        await self.channel.set_permissions(target, read_messages=False)
+        await self.vocal.set_permissions(target, view_channel=False)
+        # Remove access to the hands
+        for p in self.all_players:
+            await p.hand_channel.set_permissions(target, read_messages=False)
+
     async def add_spectator(self, target):
         if target in self.players:
             raise InvalidActionError(
@@ -609,13 +636,11 @@ class Coinche():
         if target in self.spectators:
             raise InvalidActionError(
                 f"{target.mention} Tu es déjà spectateurice.")
+
         self.spectators.add(target)
 
-        # Set permissions
-        await self.channel.set_permissions(target, read_messages=True)
-        await self.vocal.set_permissions(target, view_channel=True)
-        for p in self.players:
-            await p.hand_channel.set_permissions(target, read_messages=True)
+        await self.set_spectator_permission(target)
+
         # Notify users
         await self.channel.send("{} a rejoint en tant que spectateurice !".format(target.mention))
 
@@ -627,8 +652,8 @@ class Coinche():
         self.spectators.remove(target)
 
         # Set permissions
-        await self.channel.set_permissions(target, read_messages=False)
-        await self.vocal.set_permissions(target, view_channel=False)
+        await self.reset_permissions(target)
+
         # Notify
         await self.channel.send("{} n'est plus spectateurice !".format(target.mention))
 
